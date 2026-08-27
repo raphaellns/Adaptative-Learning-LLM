@@ -2,7 +2,7 @@ import json
 from ollama import chat
 
 
-def analyze_answer(question, student_answer):
+def analyze_answer(question, answer_key, student_answer):
 
     prompt = f"""
 Você é um professor de Algoritmos.
@@ -12,6 +12,9 @@ o gabarito e a resposta fornecida.
 
 ENUNCIADO:
 {question}
+
+GABARITO:
+{answer_key}
 
 RESPOSTA DO ALUNO:
 {student_answer}

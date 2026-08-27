@@ -1,46 +1,59 @@
-from llm_analyzer import analyze_answer
+from app.llm_analyzer import analyze_answer
+from data.questions import questions
+from data.student_answers import student_answers
+import time
 
 
-question = """
-Implemente uma função que retorne a soma de todos os elementos
-de um vetor de inteiros.
-"""
-
-student_answer = """
-public int soma(int[] vetor) {
-    int soma = 0;
-
-    for (int i = 0; i <= vetor.length; i++) {
-        soma += vetor[i];
-    }
-
-    return soma;
-}
-"""
+results = []
 
 
-result = analyze_answer(
-    question,
-    student_answer
-)
+for question_data in questions:
+
+    question_id = question_data["id"]
+
+    question = question_data["question"]
+    answer_key = question_data["answer_key"]
+    student_answer = student_answers[question_id]
+
+    print(f"Analisando questão {question_id}...")
+
+    start_time = time.time()
+
+    result = analyze_answer(
+        question,
+        answer_key,
+        student_answer
+    )
+
+    elapsed_time = time.time() - start_time
+
+    print(
+    f"Questão {question_id} analisada "
+    f"em {elapsed_time:.2f} segundos"
+    )
+
+    result["question_id"] = question_id
+    result["expected_topic"] = question_data["topic"]
+
+    results.append(result)
 
 
-print("\n===== ANÁLISE DA RESPOSTA =====\n")
+print("\n===== RESULTADO DA PROVA =====\n")
 
-if result["correta"]:
-    print("Resultado: CORRETA")
-else:
-    print("Resultado: INCORRETA")
 
-print(f"Tópico: {result['topico']}")
+for result in results:
 
-print("\nErro identificado:")
-print(result["erro_principal"])
+    print(f"Questão {result['question_id']}")
 
-print("\nExplicação:")
-print(result["explicacao"])
+    if result["correta"]:
+        print("Resultado: CORRETA")
+    else:
+        print("Resultado: INCORRETA")
 
-print("\nO que estudar:")
+    print(f"Tópico: {result['topico']}")
 
-for recommendation in result["recomendacoes"]:
-    print(f"- {recommendation}")
+    if not result["correta"]:
+        print(f"Erro: {result['erro_principal']}")
+        print(f"Explicação: {result['explicacao']}")
+
+    print()
