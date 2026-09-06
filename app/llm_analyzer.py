@@ -1,112 +1,279 @@
 import json
 import time
+
 from ollama import chat
+
 from app.topics import ALGORITHM_TOPICS
 
 
 def analyze_answer(question, answer_key, student_answer):
 
     prompt = f"""
-    Você é um professor de Algoritmos responsável por avaliar a resposta de um aluno.
+Você é um professor de Algoritmos avaliando uma resposta de aluno.
 
-    Sua tarefa é analisar cuidadosamente a resposta do aluno comparando:
-    - o enunciado da questão;
-    - o gabarito;
-    - a resposta fornecida pelo aluno.
+A disciplina utiliza a linguagem C.
 
-    ENUNCIADO:
-    {question}
+ENUNCIADO:
+{question}
 
-    GABARITO:
-    {answer_key}
+GABARITO:
+{answer_key}
 
-    RESPOSTA DO ALUNO:
-    {student_answer}
+RESPOSTA DO ALUNO:
+{student_answer}
 
+Determine:
 
-    Determine:
+1. Se a resposta está correta.
+2. O principal erro, caso exista.
+3. O principal tópico da questão.
+4. Uma explicação didática.
+5. Recomendações de estudo somente se houver erro.
 
-    1. Se a resposta está correta.
-    2. Qual é o principal erro cometido, caso exista.
-    3. Qual tópico de Algoritmos está relacionado à questão.
-    4. Explique o resultado de forma didática.
-    5. Recomende conteúdos que o aluno deveria estudar, caso tenha cometido um erro.
+REGRAS:
 
+A resposta só pode ser classificada como CORRETA quando realmente
+atender ao que foi solicitado no enunciado.
 
-    REGRAS IMPORTANTES PARA AVALIAÇÃO:
+Classifique como INCORRETA quando existir erro conceitual, lógico,
+técnico ou de sintaxe que torne a resposta inadequada.
 
-    - Avalie a resposta pelo seu significado e pelo conceito apresentado,
-    e não apenas pelas palavras utilizadas.
+Avalie o conceito e o significado da resposta, não apenas palavras
+iguais ao gabarito.
 
-    - Não considere uma resposta incorreta apenas porque o aluno utilizou
-    uma terminologia diferente da utilizada no gabarito.
+Não exija uma implementação idêntica ao gabarito quando existir
+outra solução válida em C.
 
-    - Respostas escritas em linguagem natural podem estar corretas mesmo
-    que não utilizem exatamente os mesmos termos do gabarito.
+Uma construção válida em outra linguagem, mas inválida em C,
+deve ser considerada INCORRETA.
 
-    - Não exija que o aluno utilize uma implementação, estrutura de código
-    ou explicação idêntica ao gabarito.
+EXEMPLO:
 
-    - Se a resposta demonstrar corretamente o conceito solicitado pela
-    questão, considere-a correta.
+Pergunta:
+Qual tipo deve ser usado para armazenar um número inteiro?
 
-    - Só marque a resposta como incorreta quando existir um erro conceitual,
-    lógico ou técnico relevante.
+Gabarito:
+int
 
-    - Não invente erros que não estejam presentes na resposta do aluno.
+Aluno:
+float
 
-    - Não interprete uma diferença de terminologia como um erro conceitual
-    sem antes verificar o significado da resposta no contexto da questão.
+Resposta:
+INCORRETA
 
-    - Considere o que a questão realmente está perguntando antes de avaliar
-    a resposta.
+EXEMPLO:
 
-    - Se a resposta estiver correta, "erro_principal" deve ser uma string vazia
-    e "recomendacoes" deve ser uma lista vazia.
+Pergunta:
+Declare uma variável para armazenar um único caractere.
 
-    - Se a resposta estiver parcialmente correta, determine se existe um erro
-    conceitual relevante. Não marque automaticamente como incorreta apenas
-    porque a resposta não possui todos os detalhes do gabarito.
+Gabarito:
+char nome;
 
-    - Não exija detalhes que não foram solicitados explicitamente pela questão.
+Aluno:
+string nome;
 
-
-    Antes de marcar uma resposta como incorreta, siga estas etapas:
-
-    1. Identifique exatamente o que a questão solicita.
-    2. Identifique qual conceito o aluno apresentou.
-    3. Compare o conceito apresentado pelo aluno com o conceito correto.
-    4. Verifique se existe realmente uma contradição ou erro.
-    5. Diferencie erros conceituais de diferenças de terminologia.
-    6. Somente depois determine se a resposta está correta ou incorreta.
+Resposta:
+INCORRETA
 
 
-    O tópico deve ser obrigatoriamente um dos seguintes:
+REGRAS PARA O TÓPICO:
 
-    {", ".join(ALGORITHM_TOPICS)}
+Escolha exatamente UM tópico da lista abaixo:
 
-    Não invente novos tópicos.
-    Não altere os nomes dos tópicos.
-    Escolha apenas um tópico da lista.
-    """
+{", ".join(ALGORITHM_TOPICS)}
+
+O tópico deve representar o PRINCIPAL CONCEITO PEDAGÓGICO COBRADO
+pela questão, e não simplesmente uma característica do código.
+
+Para determinar o tópico, siga ESTA ORDEM DE PRIORIDADE:
+
+1. SINTAXE DA LINGUAGEM C
+
+Se a questão pedir para:
+- identificar um erro de sintaxe;
+- encontrar o erro em um código;
+- corrigir um código que não compila;
+- identificar símbolo, parêntese, chave, ponto e vírgula ou
+  outra construção sintaticamente inválida;
+
+classifique como "Sintaxe da linguagem C".
+
+Nesse caso, não escolha outro tópico apenas porque o código contém
+if, for, while, scanf, declaração de variável etc.
+
+Exemplo:
+for (int i = 0; i < 10; i++
+    printf("%d", i);
+
+
+Mesmo contendo um for, o tópico é "Sintaxe da linguagem C"
+porque o objetivo da questão é identificar um erro de sintaxe.
+
+
+2. LÓGICA DE PROGRAMAÇÃO
+
+Se a questão pedir para:
+- realizar um cálculo;
+- montar uma expressão;
+- aplicar uma fórmula;
+- resolver um problema por meio de operações;
+- transformar valores;
+- calcular área, média, conversão ou outro resultado;
+- desenvolver o raciocínio necessário para chegar a um resultado;
+
+classifique como "Lógica de programação".
+
+Não escolha "Entrada e saída de dados" apenas porque a questão
+utiliza scanf ou printf.
+
+Não escolha "Declaração de variáveis" apenas porque existem
+variáveis no código.
+
+Exemplo:
+scanf("%f", &lado);
+area = lado * lado;
+printf("%f", area);
+
+Se o objetivo da questão for calcular a área do quadrado,
+o tópico é "Lógica de programação".
+
+
+3. ESTRUTURAS CONDICIONAIS
+
+Se o conceito principal ensinado for a tomada de decisão utilizando:
+- if;
+- else;
+- else if;
+- condições;
+- operadores relacionais ou lógicos utilizados para decidir
+  entre caminhos diferentes;
+
+classifique como "Estruturas condicionais".
+
+Um erro dentro de um if não muda o tópico para sintaxe quando
+a questão não está pedindo identificação de erro de sintaxe.
+
+
+4. ESTRUTURAS DE REPETIÇÃO
+
+Se o conceito principal ensinado for repetição utilizando:
+- for;
+- while;
+- do while;
+- contadores;
+- condições de repetição;
+
+classifique como "Estruturas de repetição".
+
+Porém, se a questão estiver explicitamente pedindo para encontrar
+um erro de sintaxe em um for, while ou do while, siga a regra 1
+e classifique como "Sintaxe da linguagem C".
+
+
+5. ENTRADA E SAÍDA DE DADOS
+
+Classifique como "Entrada e saída de dados" quando o principal
+objetivo da questão for:
+- ler dados do usuário;
+- utilizar scanf;
+- exibir dados;
+- utilizar printf;
+- entender entrada ou saída de informações.
+
+Não escolha este tópico apenas porque scanf ou printf aparecem
+como parte de uma questão maior.
+
+Exemplo:
+Leia um número inteiro e calcule seu quadrado.
+
+Se o objetivo principal for realizar o cálculo do quadrado,
+o tópico é "Lógica de programação", mesmo que scanf apareça
+na solução.
+
+
+6. DECLARAÇÃO DE VARIÁVEIS
+
+Classifique como "Declaração de variáveis" quando o principal
+objetivo da questão for:
+- declarar uma variável;
+- escolher o tipo de uma variável;
+- diferenciar int, float, char etc.;
+- definir corretamente uma variável e seu tipo.
+
+Não escolha este tópico apenas porque uma variável aparece
+dentro de uma questão sobre cálculo, condição ou repetição.
+
+
+REGRA FINAL:
+
+Pergunte mentalmente:
+
+"Qual é a principal habilidade que esta questão está tentando
+avaliar?"
+
+Escolha o tópico com base nessa habilidade.
+
+Não classifique pelo elemento de código mais visível.
+
+Priorize o objetivo da questão sobre os elementos secundários
+presentes na solução.
+
+Apenas escolha "Sintaxe da linguagem C" quando o foco da questão
+for realmente sintaxe ou quando a questão pedir explicitamente
+para identificar/corrigir um erro de sintaxe.
+
+
+CLASSIFICAÇÃO:
+
+O campo "classificacao" deve ser exatamente:
+
+"CORRETA"
+
+ou
+
+"INCORRETA"
+
+Se a resposta do aluno estiver errada, use "INCORRETA".
+
+Se a resposta do aluno estiver correta, use "CORRETA".
+
+A explicação e a classificação devem obrigatoriamente concordar.
+
+Se for CORRETA:
+- erro_principal = ""
+- recomendacoes = []
+
+Se for INCORRETA:
+- erro_principal deve explicar o erro
+- recomendacoes deve indicar o que estudar
+"""
 
     response_schema = {
         "type": "object",
         "properties": {
-            "correta": {"type": "boolean"},
+            "classificacao": {
+                "type": "string",
+                "enum": ["CORRETA", "INCORRETA"]
+            },
             "topico": {
                 "type": "string",
                 "enum": ALGORITHM_TOPICS
             },
-            "erro_principal": {"type": "string"},
-            "explicacao": {"type": "string"},
+            "erro_principal": {
+                "type": "string"
+            },
+            "explicacao": {
+                "type": "string"
+            },
             "recomendacoes": {
                 "type": "array",
-                "items": {"type": "string"}
+                "items": {
+                    "type": "string"
+                }
             }
         },
         "required": [
-            "correta",
+            "classificacao",
             "topico",
             "erro_principal",
             "explicacao",
@@ -114,18 +281,46 @@ def analyze_answer(question, answer_key, student_answer):
         ]
     }
 
+    def run_chat(max_tokens):
+        return chat(
+            model="qwen3:4b",
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            format=response_schema,
+            think=False,
+            keep_alive=-1,
+            options={
+                "temperature": 0.1,
+                "num_predict": max_tokens
+            }
+        )
+
     start = time.time()
 
-    response = chat(
-        model="qwen3:4b",
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        format=response_schema
-    )
+    response = run_chat(400)
+
+    try:
+        result = json.loads(response.message.content)
+
+    except json.JSONDecodeError:
+        print("JSON incompleto. Tentando novamente com mais tokens...")
+
+        response = run_chat(700)
+
+        try:
+            result = json.loads(response.message.content)
+
+        except json.JSONDecodeError:
+            print("Resposta recebida:")
+            print(response.message.content)
+
+            raise RuntimeError(
+                "A LLM não retornou um JSON válido."
+            )
 
     total_time = time.time() - start
 
@@ -135,6 +330,8 @@ def analyze_answer(question, answer_key, student_answer):
     print(f"Tempo de prompt: {response.prompt_eval_duration / 1e9:.2f}s")
     print(f"Tokens do prompt: {response.prompt_eval_count}")
 
-    result = json.loads(response.message.content)
+    result["correta"] = result["classificacao"] == "CORRETA"
+
+    del result["classificacao"]
 
     return result

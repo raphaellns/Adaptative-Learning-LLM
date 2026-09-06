@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from app.llm_analyzer import analyze_answer
 from app.exam_analyzer import analyze_exam
+from app.routes.auth import router as auth_router
 
 
 app = FastAPI(
@@ -24,6 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 
 class QuestionRequest(BaseModel):
     question: str

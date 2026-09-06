@@ -1,15 +1,14 @@
 from app.llm_analyzer import analyze_answer
-from app.student_profile import build_student_profile
-from app.study_priority import calculate_study_priorities
-from app.study_plan import generate_study_plan
 
 from data.questions import questions
-from data.student_answers import student_answers
 
 import time
 
 
 results = []
+
+correct_classifications = 0
+correct_topics = 0
 
 
 for question_data in questions:
@@ -18,7 +17,10 @@ for question_data in questions:
 
     question = question_data["question"]
     answer_key = question_data["answer_key"]
-    student_answer = student_answers[question_id]
+    student_answer = question_data["student_answer"]
+
+    expected_correct = question_data["expected_correct"]
+    expected_topic = question_data["topic"]
 
     print(f"Analisando questão {question_id}...")
 
@@ -33,89 +35,114 @@ for question_data in questions:
     elapsed_time = time.time() - start_time
 
     print(
-    f"Questão {question_id} analisada "
-    f"em {elapsed_time:.2f} segundos"
+        f"Questão {question_id} analisada "
+        f"em {elapsed_time:.2f} segundos"
     )
 
     result["question_id"] = question_id
-    result["expected_topic"] = question_data["topic"]
+    result["expected_correct"] = expected_correct
+    result["expected_topic"] = expected_topic
 
     results.append(result)
 
-profile = build_student_profile(results)
+    if result["correta"] == expected_correct:
+        correct_classifications += 1
 
-priorities = calculate_study_priorities(profile)
+    if result["topico"] == expected_topic:
+        correct_topics += 1
 
-study_plan = generate_study_plan(
-    profile,
-    priorities,
-    results
+
+total_questions = len(results)
+
+
+classification_accuracy = (
+    correct_classifications / total_questions * 100
 )
 
-print("\n===== PERFIL DO ALUNO =====")
-
-print(f"Questões: {profile['total_questions']}")
-print(f"Acertos: {profile['correct']}")
-print(f"Erros: {profile['incorrect']}")
-print(f"Aproveitamento: {profile['accuracy']:.1f}%")
-
-print("\n===== DESEMPENHO POR TÓPICO =====")
-
-for topic, data in profile["topics"].items():
-
-    print(f"\n{topic}")
-    print(f"  Acertos: {data['correct']}")
-    print(f"  Erros: {data['incorrect']}")
-    print(f"  Aproveitamento: {data['accuracy']:.1f}%")
-
-    print("\n===== PRIORIDADES DE ESTUDO =====")
-
-for index, item in enumerate(priorities, start=1):
-
-    print(
-        f"{index}. {item['topic']} "
-        f"({item['accuracy']:.1f}% de aproveitamento)"
-    )
+topic_accuracy = (
+    correct_topics / total_questions * 100
+)
 
 
-print("\n===== RESULTADO DA PROVA =====\n")
+print("\n===== VALIDAÇÃO DA LLM =====")
 
+print(
+    f"Classificação correta/incorreta: "
+    f"{correct_classifications}/{total_questions} "
+    f"({classification_accuracy:.1f}%)"
+)
+
+print(
+    f"Tópico identificado corretamente: "
+    f"{correct_topics}/{total_questions} "
+    f"({topic_accuracy:.1f}%)"
+)
+
+
+print("\n===== ERROS DE CLASSIFICAÇÃO =====")
+
+classification_errors = 0
 
 for result in results:
 
-    print(f"Questão {result['question_id']}")
+    if result["correta"] != result["expected_correct"]:
 
-    if result["correta"]:
-        print("Resultado: CORRETA")
-    else:
-        print("Resultado: INCORRETA")
+        classification_errors += 1
 
-    print(f"Tópico: {result['topico']}")
+        print(f"\n❌ Questão {result['question_id']}")
 
-    if not result["correta"]:
-        print(f"Erro: {result['erro_principal']}")
-        print(f"Explicação: {result['explicacao']}")
+        print(
+            f"   Esperado: "
+            f"{result['expected_correct']}"
+        )
 
-    print()
+        print(
+            f"   LLM: "
+            f"{result['correta']}"
+        )
 
-    print("\n===== PLANO DE ESTUDOS =====")
+        print(
+            f"   Explicação da LLM: "
+            f"{result['explicacao']}"
+        )
 
-for item in study_plan["plano"]:
+        print(
+            f"   Erro identificado: "
+            f"{result['erro_principal']}"
+        )
 
-    print(f"\n{item['topico']}")
-    print(f"Prioridade: {item['prioridade']}")
-    print(f"Motivo: {item['motivo']}")
-    print(f"Objetivo: {item['objetivo']}")
 
-    print("Conteúdos:")
-    for content in item["conteudos"]:
-        print(f"  - {content}")
+if classification_errors == 0:
+    print("Nenhum erro de classificação encontrado.")
 
-    print("Atividades:")
-    for activity in item["atividades"]:
-        print(f"  - {activity}")
 
-    print(
-        f"Tempo estimado: "
-        f"{item['tempo_estimado_minutos']} minutos"
-    )
+print("\n===== ERROS DE TÓPICO =====")
+
+topic_errors = 0
+
+for result in results:
+
+    if result["topico"] != result["expected_topic"]:
+
+        topic_errors += 1
+
+        print(f"\n❌ Questão {result['question_id']}")
+
+        print(
+            f"   Esperado: "
+            f"{result['expected_topic']}"
+        )
+
+        print(
+            f"   LLM: "
+            f"{result['topico']}"
+        )
+
+        print(
+            f"   Explicação da LLM: "
+            f"{result['explicacao']}"
+        )
+
+
+if topic_errors == 0:
+    print("Nenhum erro de tópico encontrado.")
