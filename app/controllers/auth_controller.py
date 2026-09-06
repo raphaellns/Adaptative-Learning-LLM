@@ -24,3 +24,5 @@ def register_user(request: RegisterRequest, db: Session):
             "email": user.email
         }
     }
+
+
