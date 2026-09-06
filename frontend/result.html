@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Resultado | Adaptive Learning</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header class="topbar">
+
+        <button id="back-button" class="back-button" type="button">
+            ←
+        </button>
+
+        <div class="topbar-title">
+            <span>Resultado da análise</span>
+        </div>
+
+    </header>
+
+
+    <main class="main-content">
+
+        <div class="page-header">
+
+            <p class="eyebrow">
+                ANÁLISE CONCLUÍDA
+            </p>
+
+            <h1>Resultado da prova</h1>
+
+            <p>
+                Confira o desempenho e a análise detalhada das suas
+                respostas.
+            </p>
+
+        </div>
+
+
+        <section id="performance-card" class="performance-card">
+
+            <div class="performance-item">
+                <span class="performance-label">
+                    Questões
+                </span>
+
+                <strong id="total-questions">
+                    -
+                </strong>
+            </div>
+
+
+            <div class="performance-item">
+                <span class="performance-label">
+                    Acertos
+                </span>
+
+                <strong id="correct-answers">
+                    -
+                </strong>
+            </div>
+
+
+            <div class="performance-item">
+                <span class="performance-label">
+                    Erros
+                </span>
+
+                <strong id="incorrect-answers">
+                    -
+                </strong>
+            </div>
+
+
+            <div class="performance-item">
+                <span class="performance-label">
+                    Aproveitamento
+                </span>
+
+                <strong id="accuracy">
+                    -
+                </strong>
+            </div>
+
+        </section>
+
+
+        <section>
+
+            <div class="results-header">
+
+                <h2>
+                    Análise das questões
+                </h2>
+
+            </div>
+
+            <div id="questions-results"></div>
+
+        </section>
+
+
+        <section class="recommendations-card">
+
+            <div>
+
+                <p class="eyebrow">
+                    PRÓXIMOS PASSOS
+                </p>
+
+                <h2>
+                    O que estudar agora?
+                </h2>
+
+                <p>
+                    Com base nos seus erros, o sistema poderá indicar
+                    os conteúdos que merecem mais atenção.
+                </p>
+
+            </div>
+
+            <div id="study-recommendations">
+                <p>
+                    As recomendações serão exibidas aqui.
+                </p>
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <script src="js/result.js"></script>
+
+</body>
+
+</html>

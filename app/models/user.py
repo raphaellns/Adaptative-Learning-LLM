@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import BigInteger, String, TIMESTAMP, text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -36,3 +36,10 @@ class User(Base):
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP")
     )
+
+    exams: Mapped[list["Exam"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+from app.models.exam import Exam

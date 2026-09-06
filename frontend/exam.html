@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Analisar Prova | Adaptive Learning</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header class="topbar">
+
+        <button id="back-button" class="back-button" type="button">
+            ←
+        </button>
+
+        <div class="topbar-title">
+            <span>Analisar prova</span>
+        </div>
+
+    </header>
+
+
+    <main class="main-content">
+
+        <div class="page-header">
+
+            <p class="eyebrow">
+                AVALIAÇÃO
+            </p>
+
+            <h1>Analisar prova</h1>
+
+            <p>
+                Adicione as questões da avaliação, informe o gabarito
+                e a resposta do aluno. A inteligência artificial irá
+                analisar o desempenho.
+            </p>
+
+        </div>
+
+
+        <form id="exam-form">
+
+            <div id="questions-container"></div>
+
+
+            <div class="exam-actions">
+
+                <button type="button" id="add-question" class="secondary-button">
+                    + Adicionar questão
+                </button>
+
+                <button type="submit" class="primary-button">
+                    Analisar prova
+                </button>
+
+            </div>
+
+        </form>
+
+
+        <div id="exam-message"></div>
+
+    </main>
+
+
+    <script src="js/exam.js"></script>
+
+</body>
+
+</html>

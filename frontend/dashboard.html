@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | Adaptive Learning</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header class="topbar">
+
+        <button id="menu-button" class="menu-button" aria-label="Abrir menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <div class="topbar-title">
+            <span>Adaptive Learning</span>
+        </div>
+
+        <div class="topbar-user">
+            <span id="user-name-short"></span>
+        </div>
+
+    </header>
+
+
+    <aside id="sidebar" class="sidebar">
+
+        <div class="sidebar-header">
+            <h2>Adaptive Learning</h2>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <button class="menu-item active" data-section="home">
+                <span>🏠</span>
+                <span>Início</span>
+            </button>
+
+            <button class="menu-item" data-section="exam">
+                <span>📝</span>
+                <span>Analisar prova</span>
+            </button>
+
+            <button class="menu-item" data-section="history">
+                <span>📊</span>
+                <span>Histórico</span>
+            </button>
+
+            <button class="menu-item" data-section="profile">
+                <span>👤</span>
+                <span>Meu perfil</span>
+            </button>
+
+            <button class="menu-item" data-section="about">
+                <span>ℹ️</span>
+                <span>Sobre o projeto</span>
+            </button>
+
+        </nav>
+
+        <div class="sidebar-footer">
+
+            <button id="logout-button" class="menu-item logout">
+                <span>🚪</span>
+                <span>Sair</span>
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <div id="overlay" class="overlay"></div>
+
+
+    <main class="main-content">
+
+        <!-- INÍCIO -->
+
+        <section id="home-section" class="content-section active-section">
+
+            <div class="welcome-section">
+
+                <p class="eyebrow">
+                    APRENDIZAGEM ADAPTATIVA
+                </p>
+
+                <h1>
+                    Olá, <span id="user-name"></span> 👋
+                </h1>
+
+                <p class="welcome-text">
+                    Acompanhe seu desempenho, analise provas e descubra
+                    quais conteúdos precisam de mais atenção.
+                </p>
+
+            </div>
+
+
+            <div class="dashboard-grid">
+
+                <div class="dashboard-card highlight-card">
+
+                    <div class="card-icon">
+                        📝
+                    </div>
+
+                    <div>
+                        <h3>Analisar uma prova</h3>
+
+                        <p>
+                            Envie suas questões e deixe o sistema analisar
+                            suas respostas com inteligência artificial.
+                        </p>
+
+                        <button class="primary-button" id="start-exam-button">
+                            Começar análise
+                        </button>
+                    </div>
+
+                </div>
+
+
+                <div class="dashboard-card">
+
+                    <div class="card-icon">
+                        📊
+                    </div>
+
+                    <h3>Seu desempenho</h3>
+
+                    <p>
+                        Em breve, seu histórico de avaliações aparecerá aqui.
+                    </p>
+
+                    <div class="empty-state">
+                        <strong>Sem avaliações ainda</strong>
+                        <span>Faça sua primeira análise para começar.</span>
+                    </div>
+
+                </div>
+
+
+                <div class="dashboard-card">
+
+                    <div class="card-icon">
+                        🎯
+                    </div>
+
+                    <h3>Prioridades de estudo</h3>
+
+                    <p>
+                        O sistema identificará os assuntos que mais precisam
+                        de atenção com base no seu desempenho.
+                    </p>
+
+                    <div class="empty-state">
+                        <strong>Aguardando dados</strong>
+                        <span>Suas prioridades aparecerão aqui.</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <div>
+
+                    <p class="eyebrow">
+                        COMO FUNCIONA
+                    </p>
+
+                    <h2>
+                        O sistema aprende com seu desempenho
+                    </h2>
+
+                    <p>
+                        A cada avaliação, suas respostas são analisadas,
+                        seus erros são identificados e os conteúdos que
+                        precisam de mais atenção são encontrados.
+                    </p>
+
+                </div>
+
+
+                <div class="steps">
+
+                    <div class="step">
+                        <span>1</span>
+                        <div>
+                            <strong>Você responde</strong>
+                            <p>Faça uma avaliação.</p>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <span>2</span>
+                        <div>
+                            <strong>A IA analisa</strong>
+                            <p>Seus erros e tópicos são identificados.</p>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <span>3</span>
+                        <div>
+                            <strong>O estudo se adapta</strong>
+                            <p>Suas prioridades são definidas.</p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- PROVA -->
+
+        <section id="exam-section" class="content-section">
+
+            <div class="page-header">
+
+                <p class="eyebrow">
+                    AVALIAÇÃO
+                </p>
+
+                <h1>Analisar prova</h1>
+
+                <p>
+                    Em breve você poderá enviar sua prova e receber uma
+                    análise detalhada da inteligência artificial.
+                </p>
+
+            </div>
+
+
+            <div class="dashboard-card coming-soon-card">
+
+                <span class="large-icon">🧠</span>
+
+                <h2>Análise com inteligência artificial</h2>
+
+                <p>
+                    Essa área vai utilizar o modelo de linguagem para
+                    analisar suas respostas, identificar erros,
+                    classificar os conteúdos e gerar recomendações.
+                </p>
+
+                <button class="primary-button" id="open-exam-button">
+                    Preparar avaliação
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- HISTÓRICO -->
+
+        <section id="history-section" class="content-section">
+
+            <div class="page-header">
+
+                <p class="eyebrow">
+                    ACOMPANHAMENTO
+                </p>
+
+                <h1>Histórico</h1>
+
+                <p>
+                    Aqui ficarão registradas suas avaliações e sua evolução
+                    ao longo do tempo.
+                </p>
+
+            </div>
+
+
+            <div class="dashboard-card empty-large">
+
+                <span class="large-icon">📊</span>
+
+                <h2>Nenhum histórico ainda</h2>
+
+                <p>
+                    Depois da sua primeira avaliação, seus resultados
+                    aparecerão aqui.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- PERFIL -->
+
+        <section id="profile-section" class="content-section">
+
+            <div class="page-header">
+
+                <p class="eyebrow">
+                    CONTA
+                </p>
+
+                <h1>Meu perfil</h1>
+
+                <p>
+                    Informações da sua conta.
+                </p>
+
+            </div>
+
+
+            <div class="profile-card">
+
+                <div class="profile-avatar">
+                    <span id="profile-initial"></span>
+                </div>
+
+                <div class="profile-info">
+
+                    <span class="profile-label">
+                        Nome
+                    </span>
+
+                    <h2 id="profile-name"></h2>
+
+
+                    <span class="profile-label">
+                        E-mail
+                    </span>
+
+                    <p id="profile-email"></p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- SOBRE -->
+
+        <section id="about-section" class="content-section">
+
+            <div class="page-header">
+
+                <p class="eyebrow">
+                    PROJETO
+                </p>
+
+                <h1>Sobre o Adaptive Learning</h1>
+
+                <p>
+                    Um sistema de aprendizagem adaptativa baseado em
+                    inteligência artificial.
+                </p>
+
+            </div>
+
+
+            <div class="dashboard-card">
+
+                <h2>Objetivo</h2>
+
+                <p>
+                    O projeto busca utilizar modelos de linguagem para
+                    analisar respostas de estudantes, identificar suas
+                    dificuldades e gerar recomendações personalizadas
+                    de estudo.
+                </p>
+
+                <h2 class="section-title">
+                    Tecnologias
+                </h2>
+
+                <div class="technology-list">
+
+                    <span>Python</span>
+                    <span>FastAPI</span>
+                    <span>PostgreSQL</span>
+                    <span>SQLAlchemy</span>
+                    <span>Ollama</span>
+                    <span>Qwen3</span>
+                    <span>HTML</span>
+                    <span>CSS</span>
+                    <span>JavaScript</span>
+
+                </div>
+
+                <p class="project-author">
+                    Desenvolvido por <strong>Raphaell Nunes e Silva</strong><br>
+                    Instituto Federal Sul-rio-grandense (IFSul)<br>
+                    Campus Bagé
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="js/dashboard.js"></script>
+
+</body>
+
+</html>
