@@ -42,4 +42,10 @@ class User(Base):
         cascade="all, delete-orphan"
     )
 
+    role: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        server_default="STUDENT"
+    )
+
 from app.models.exam import Exam

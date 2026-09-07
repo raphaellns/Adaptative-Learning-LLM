@@ -4,10 +4,13 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.exam_analyzer import analyze_exam
+from app.models.analysis import Analysis
 from app.models.exam import Exam
 from app.models.exam_question import ExamQuestion
-from app.models.analysis import Analysis
 from app.schemas.exam import ExamRequest
+from app.student_profile import build_student_profile
+from app.study_priority import calculate_study_priorities
+from app.study_plan import generate_study_plan
 
 
 def analyze_and_save_exam(
@@ -17,6 +20,7 @@ def analyze_and_save_exam(
 ):
 
     if not request.questions:
+
         raise HTTPException(
             status_code=400,
             detail="A prova precisa ter pelo menos uma questão."
@@ -28,10 +32,11 @@ def analyze_and_save_exam(
     )
 
     db.add(exam)
+
     db.flush()
 
 
-    results = []
+    current_results = []
 
 
     for question_data in request.questions:
@@ -51,6 +56,7 @@ def analyze_and_save_exam(
         )
 
         db.add(question)
+
         db.flush()
 
 
@@ -68,15 +74,76 @@ def analyze_and_save_exam(
 
         db.add(analysis)
 
-        results.append(result)
+
+        current_results.append(result)
 
 
     db.commit()
 
 
+    historical_analyses = (
+        db.query(Analysis)
+        .join(
+            ExamQuestion,
+            Analysis.question_id == ExamQuestion.id
+        )
+        .join(
+            Exam,
+            ExamQuestion.exam_id == Exam.id
+        )
+        .filter(
+            Exam.user_id == user_id
+        )
+        .all()
+    )
+
+
+    historical_results = []
+
+
+    for analysis in historical_analyses:
+
+        recommendations = []
+
+        if analysis.recomendacoes:
+
+            recommendations = json.loads(
+                analysis.recomendacoes
+            )
+
+
+        historical_results.append({
+            "correta": analysis.correta,
+            "topico": analysis.topico,
+            "erro_principal": analysis.erro_principal,
+            "explicacao": analysis.explicacao,
+            "recomendacoes": recommendations
+        })
+
+
+    profile = build_student_profile(
+        historical_results
+    )
+
+
+    priorities = calculate_study_priorities(
+        profile
+    )
+
+
+    study_plan = generate_study_plan(
+        profile,
+        priorities,
+        historical_results
+    )
+
+
     return {
         "exam_id": exam.id,
-        "questions": results
+        "questions": current_results,
+        "profile": profile,
+        "priorities": priorities,
+        "study_plan": study_plan
     }
 
 

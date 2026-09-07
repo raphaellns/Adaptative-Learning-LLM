@@ -5,6 +5,9 @@ from pydantic import BaseModel
 from app.llm_analyzer import analyze_answer
 from app.routes.auth import router as auth_router
 from app.routes.exam import router as exam_router
+from app.routes.admin import router as admin_router
+from app.routes.history import router as history_router
+from app.routes.profile import router as profile_router
 
 
 app = FastAPI(
@@ -29,6 +32,9 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(exam_router)
+app.include_router(admin_router)
+app.include_router(history_router)
+app.include_router(profile_router)
 
 class QuestionRequest(BaseModel):
     question: str

@@ -26,10 +26,11 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return password_hash.verify(password, hashed_password)
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int, role: str) -> str:
 
     payload = {
-        "sub": str(user_id)
+        "sub": str(user_id),
+        "role": role
     }
 
     return jwt.encode(

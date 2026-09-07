@@ -7,7 +7,7 @@ from app.topics import ALGORITHM_TOPICS
 
 def generate_study_plan(profile, priorities, results):
 
-    incorrect_results = [
+    historical_incorrect_results = [
         {
             "topico": result["topico"],
             "erro_principal": result["erro_principal"],
@@ -22,17 +22,16 @@ def generate_study_plan(profile, priorities, results):
 Você é um professor de Algoritmos responsável por criar
 um plano de estudos personalizado para um aluno.
 
-O plano deve ser baseado exclusivamente no desempenho
-apresentado pelo aluno.
+O plano deve ser baseado no desempenho ACUMULADO do aluno.
 
-PERFIL DO ALUNO:
+PERFIL ACUMULADO DO ALUNO:
 {json.dumps(profile, ensure_ascii=False, indent=2)}
 
 PRIORIDADES DE ESTUDO:
 {json.dumps(priorities, ensure_ascii=False, indent=2)}
 
-ERROS COMETIDOS:
-{json.dumps(incorrect_results, ensure_ascii=False, indent=2)}
+ERROS IDENTIFICADOS NO HISTÓRICO:
+{json.dumps(historical_incorrect_results, ensure_ascii=False, indent=2)}
 
 
 Crie um plano de estudos adaptativo.
@@ -41,15 +40,18 @@ Para cada tópico que apresentar dificuldade, determine:
 
 1. Quais conteúdos o aluno deve revisar.
 2. Quanto tempo aproximadamente deve ser dedicado ao tópico.
+3. Atividades que ajudem a corrigir as dificuldades observadas.
 
 
 REGRAS:
 
+- Considere o desempenho acumulado do aluno, não somente uma avaliação.
 - Priorize os tópicos com menor aproveitamento.
-- Use os erros cometidos pelo aluno para personalizar o plano.
-- Não recomende estudos para tópicos em que o aluno demonstrou
-  domínio, a menos que seja necessário para outro tópico.
-- Não invente erros que não aparecem nos dados fornecidos.
+- Use os erros observados ao longo do histórico para personalizar o plano.
+- Dê maior atenção a dificuldades que aparecem repetidamente.
+- Não recomende estudos para tópicos em que o aluno demonstra domínio,
+  a menos que sejam necessários para outro tópico.
+- Não invente erros que não aparecem no histórico.
 - Não invente informações sobre o desempenho do aluno.
 - Os tópicos utilizados devem obrigatoriamente pertencer à lista:
 
@@ -123,7 +125,45 @@ REGRAS:
                 "content": prompt
             }
         ],
-        format=response_schema
+        format=response_schema,
+        think=False,
+        keep_alive=-1,
+        options={
+            "temperature": 0.1,
+            "num_predict": 1000
+        }
     )
 
-    return json.loads(response.message.content)
+    try:
+        return json.loads(response.message.content)
+
+    except json.JSONDecodeError:
+        print("JSON do plano incompleto. Tentando novamente...")
+
+        response = chat(
+            model="qwen3:4b",
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            format=response_schema,
+            think=False,
+            keep_alive=-1,
+            options={
+                "temperature": 0.1,
+                "num_predict": 1000
+            }
+        )
+
+        try:
+            return json.loads(response.message.content)
+
+        except json.JSONDecodeError:
+            print("Resposta recebida:")
+            print(response.message.content)
+
+            raise RuntimeError(
+                "A LLM não retornou um JSON válido para o plano de estudos."
+            )

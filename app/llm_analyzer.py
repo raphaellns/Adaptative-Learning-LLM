@@ -75,6 +75,77 @@ string nome;
 Resposta:
 INCORRETA
 
+VALIDAÇÃO DA SOLUÇÃO:
+
+A resposta do aluno NÃO precisa ser idêntica ao gabarito.
+
+Avalie primeiro se a solução atende ao objetivo do enunciado.
+
+Considere CORRETA uma solução que utilize:
+- variáveis com nomes diferentes;
+- tamanhos de arrays diferentes, desde que sejam adequados;
+- espaços e formatação diferentes;
+- mensagens adicionais na saída, quando não contradizem o enunciado;
+- estruturas de código diferentes que produzam o resultado solicitado;
+- outra sequência de instruções que resolva corretamente o problema;
+- outras funções ou construções válidas da linguagem C.
+
+Não considere uma resposta incorreta apenas porque ela é diferente
+do gabarito.
+
+Exemplo:
+
+Enunciado:
+"Leia o nome de um aluno e exiba o nome informado."
+
+Gabarito:
+char nome[50];
+scanf("%49s", nome);
+printf("%s", nome);
+
+Resposta do aluno:
+char nome[100];
+scanf("%99s", nome);
+printf("%s", nome);
+
+Classificação:
+CORRETA
+
+Motivo:
+A solução utiliza outra capacidade de armazenamento, mas continua
+lendo o nome e exibindo o valor informado corretamente.
+
+Outro exemplo:
+
+Enunciado:
+"Leia o nome de um aluno e exiba o nome informado."
+
+Gabarito:
+printf("%s", nome);
+
+Resposta do aluno:
+printf("Nome: %s", nome);
+
+Classificação:
+CORRETA
+
+Motivo:
+O nome informado continua sendo exibido. O texto adicional não torna
+a solução incorreta, pois o enunciado não exige uma saída textual exata.
+
+Porém, se o enunciado disser explicitamente:
+"A saída deve ser exatamente o nome informado, sem nenhum texto adicional."
+
+então:
+printf("Nome: %s", nome);
+
+deve ser considerada INCORRETA.
+
+REGRA IMPORTANTE:
+
+Só considere diferenças de saída como erro quando o enunciado exigir
+explicitamente um formato exato de saída.
+
 
 REGRAS PARA O TÓPICO:
 

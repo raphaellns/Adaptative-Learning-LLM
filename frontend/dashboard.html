@@ -12,17 +12,21 @@
 
 <body>
 
+    <!-- Barra superior -->
+
     <header class="topbar">
 
-        <button id="menu-button" class="menu-button" aria-label="Abrir menu">
+        <button id="menu-button" class="menu-button" type="button" aria-label="Abrir menu">
             <span></span>
             <span></span>
             <span></span>
         </button>
 
+
         <div class="topbar-title">
             <span>Adaptive Learning</span>
         </div>
+
 
         <div class="topbar-user">
             <span id="user-name-short"></span>
@@ -31,44 +35,72 @@
     </header>
 
 
+    <!-- Menu lateral -->
+
     <aside id="sidebar" class="sidebar">
 
         <div class="sidebar-header">
+
             <h2>Adaptive Learning</h2>
+
         </div>
+
 
         <nav class="sidebar-nav">
 
-            <button class="menu-item active" data-section="home">
+            <button class="menu-item active" data-section="home" type="button">
                 <span>🏠</span>
                 <span>Início</span>
             </button>
 
-            <button class="menu-item" data-section="exam">
+
+            <button class="menu-item" data-section="exam" type="button">
                 <span>📝</span>
                 <span>Analisar prova</span>
             </button>
 
-            <button class="menu-item" data-section="history">
+
+            <button class="menu-item" data-section="history" type="button">
                 <span>📊</span>
                 <span>Histórico</span>
             </button>
 
-            <button class="menu-item" data-section="profile">
+
+            <button class="menu-item" data-section="profile" type="button">
                 <span>👤</span>
                 <span>Meu perfil</span>
             </button>
 
-            <button class="menu-item" data-section="about">
+            <button class="menu-item" data-section="study-plan" type="button">
+                <span>📚</span>
+                <span>Plano de estudos</span>
+            </button>
+
+
+            <button class="menu-item" data-section="about" type="button">
                 <span>ℹ️</span>
                 <span>Sobre o projeto</span>
             </button>
 
+
+            <!--
+                Esta opção começa escondida.
+                O dashboard.js mostra ela apenas
+                quando o usuário possui role ADMIN.
+            -->
+
+            <button id="admin-users-menu" class="menu-item" data-section="admin-users" type="button"
+                style="display: none;">
+                <span>👑</span>
+                <span>Usuários</span>
+            </button>
+
         </nav>
+
 
         <div class="sidebar-footer">
 
-            <button id="logout-button" class="menu-item logout">
+            <button id="logout-button" class="menu-item logout" type="button">
                 <span>🚪</span>
                 <span>Sair</span>
             </button>
@@ -78,12 +110,19 @@
     </aside>
 
 
+    <!-- Fundo escuro quando o menu abre -->
+
     <div id="overlay" class="overlay"></div>
 
 
+    <!-- Conteúdo principal -->
+
     <main class="main-content">
 
-        <!-- INÍCIO -->
+
+        <!-- ================================= -->
+        <!-- INÍCIO                            -->
+        <!-- ================================= -->
 
         <section id="home-section" class="content-section active-section">
 
@@ -107,27 +146,38 @@
 
             <div class="dashboard-grid">
 
+
+                <!-- Card principal -->
+
                 <div class="dashboard-card highlight-card">
 
                     <div class="card-icon">
                         📝
                     </div>
 
+
                     <div>
-                        <h3>Analisar uma prova</h3>
+
+                        <h3>
+                            Analisar uma prova
+                        </h3>
 
                         <p>
                             Envie suas questões e deixe o sistema analisar
                             suas respostas com inteligência artificial.
                         </p>
 
-                        <button class="primary-button" id="start-exam-button">
+
+                        <button class="primary-button" id="start-exam-button" type="button">
                             Começar análise
                         </button>
+
                     </div>
 
                 </div>
 
+
+                <!-- Desempenho -->
 
                 <div class="dashboard-card">
 
@@ -135,19 +185,37 @@
                         📊
                     </div>
 
-                    <h3>Seu desempenho</h3>
+                    <h3>
+                        Seu desempenho
+                    </h3>
 
                     <p>
-                        Em breve, seu histórico de avaliações aparecerá aqui.
+                        Acompanhe seu desempenho acumulado nas avaliações.
                     </p>
 
-                    <div class="empty-state">
-                        <strong>Sem avaliações ainda</strong>
-                        <span>Faça sua primeira análise para começar.</span>
+                    <div class="home-performance">
+
+                        <div class="home-performance-item">
+                            <span>Questões</span>
+                            <strong id="home-total">-</strong>
+                        </div>
+
+                        <div class="home-performance-item">
+                            <span>Acertos</span>
+                            <strong id="home-correct">-</strong>
+                        </div>
+
+                        <div class="home-performance-item">
+                            <span>Aproveitamento</span>
+                            <strong id="home-accuracy">-</strong>
+                        </div>
+
                     </div>
 
                 </div>
 
+
+                <!-- Prioridades -->
 
                 <div class="dashboard-card">
 
@@ -155,78 +223,122 @@
                         🎯
                     </div>
 
-                    <h3>Prioridades de estudo</h3>
+                    <h3>
+                        Prioridades de estudo
+                    </h3>
 
                     <p>
-                        O sistema identificará os assuntos que mais precisam
-                        de atenção com base no seu desempenho.
+                        Conteúdos que atualmente precisam de mais atenção.
                     </p>
 
-                    <div class="empty-state">
-                        <strong>Aguardando dados</strong>
-                        <span>Suas prioridades aparecerão aqui.</span>
+                    <div id="home-priorities">
+
+                        <div class="empty-state">
+
+                            <strong>
+                                Carregando...
+                            </strong>
+
+                        </div>
+
                     </div>
 
                 </div>
 
-            </div>
+
+                <!-- Explicação do sistema -->
+
+                <div class="info-card">
+
+                    <div>
+
+                        <p class="eyebrow">
+                            COMO FUNCIONA
+                        </p>
+
+                        <h2>
+                            O sistema aprende com seu desempenho
+                        </h2>
+
+                        <p>
+                            A cada avaliação, suas respostas são analisadas,
+                            seus erros são identificados e os conteúdos que
+                            precisam de mais atenção são encontrados.
+                        </p>
+
+                    </div>
 
 
-            <div class="info-card">
+                    <div class="steps">
 
-                <div>
 
-                    <p class="eyebrow">
-                        COMO FUNCIONA
-                    </p>
+                        <div class="step">
 
-                    <h2>
-                        O sistema aprende com seu desempenho
-                    </h2>
+                            <span>1</span>
 
-                    <p>
-                        A cada avaliação, suas respostas são analisadas,
-                        seus erros são identificados e os conteúdos que
-                        precisam de mais atenção são encontrados.
-                    </p>
+                            <div>
+
+                                <strong>
+                                    Você responde
+                                </strong>
+
+                                <p>
+                                    Faça uma avaliação.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="step">
+
+                            <span>2</span>
+
+                            <div>
+
+                                <strong>
+                                    A IA analisa
+                                </strong>
+
+                                <p>
+                                    Seus erros e tópicos são identificados.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="step">
+
+                            <span>3</span>
+
+                            <div>
+
+                                <strong>
+                                    O estudo se adapta
+                                </strong>
+
+                                <p>
+                                    Suas prioridades são definidas.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
 
                 </div>
-
-
-                <div class="steps">
-
-                    <div class="step">
-                        <span>1</span>
-                        <div>
-                            <strong>Você responde</strong>
-                            <p>Faça uma avaliação.</p>
-                        </div>
-                    </div>
-
-                    <div class="step">
-                        <span>2</span>
-                        <div>
-                            <strong>A IA analisa</strong>
-                            <p>Seus erros e tópicos são identificados.</p>
-                        </div>
-                    </div>
-
-                    <div class="step">
-                        <span>3</span>
-                        <div>
-                            <strong>O estudo se adapta</strong>
-                            <p>Suas prioridades são definidas.</p>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
 
         </section>
 
 
-        <!-- PROVA -->
+
+        <!-- ================================= -->
+        <!-- ANALISAR PROVA                    -->
+        <!-- ================================= -->
 
         <section id="exam-section" class="content-section">
 
@@ -236,11 +348,13 @@
                     AVALIAÇÃO
                 </p>
 
-                <h1>Analisar prova</h1>
+                <h1>
+                    Analisar prova
+                </h1>
 
                 <p>
-                    Em breve você poderá enviar sua prova e receber uma
-                    análise detalhada da inteligência artificial.
+                    Envie uma avaliação para receber uma análise
+                    personalizada.
                 </p>
 
             </div>
@@ -248,17 +362,22 @@
 
             <div class="dashboard-card coming-soon-card">
 
-                <span class="large-icon">🧠</span>
+                <span class="large-icon">
+                    🧠
+                </span>
 
-                <h2>Análise com inteligência artificial</h2>
+                <h2>
+                    Análise com inteligência artificial
+                </h2>
 
                 <p>
-                    Essa área vai utilizar o modelo de linguagem para
-                    analisar suas respostas, identificar erros,
-                    classificar os conteúdos e gerar recomendações.
+                    A análise de prova utiliza o modelo de linguagem
+                    para identificar erros, classificar conteúdos
+                    e gerar recomendações.
                 </p>
 
-                <button class="primary-button" id="open-exam-button">
+
+                <button class="primary-button" id="open-exam-button" type="button">
                     Preparar avaliação
                 </button>
 
@@ -267,7 +386,10 @@
         </section>
 
 
-        <!-- HISTÓRICO -->
+
+        <!-- ================================= -->
+        <!-- HISTÓRICO                         -->
+        <!-- ================================= -->
 
         <section id="history-section" class="content-section">
 
@@ -277,25 +399,21 @@
                     ACOMPANHAMENTO
                 </p>
 
-                <h1>Histórico</h1>
+                <h1>
+                    Histórico
+                </h1>
 
                 <p>
-                    Aqui ficarão registradas suas avaliações e sua evolução
-                    ao longo do tempo.
+                    Acompanhe suas avaliações e sua evolução ao longo do tempo.
                 </p>
 
             </div>
 
 
-            <div class="dashboard-card empty-large">
-
-                <span class="large-icon">📊</span>
-
-                <h2>Nenhum histórico ainda</h2>
+            <div id="history-container" class="dashboard-card">
 
                 <p>
-                    Depois da sua primeira avaliação, seus resultados
-                    aparecerão aqui.
+                    Carregando histórico...
                 </p>
 
             </div>
@@ -303,45 +421,109 @@
         </section>
 
 
-        <!-- PERFIL -->
+
+        <!-- ================================= -->
+        <!-- PERFIL                            -->
+        <!-- ================================= -->
 
         <section id="profile-section" class="content-section">
 
             <div class="page-header">
 
                 <p class="eyebrow">
-                    CONTA
+                    DESEMPENHO
                 </p>
 
-                <h1>Meu perfil</h1>
+                <h1>
+                    Meu perfil
+                </h1>
 
                 <p>
-                    Informações da sua conta.
+                    Veja seu desempenho acumulado em cada tópico.
                 </p>
 
             </div>
 
 
-            <div class="profile-card">
+            <div class="performance-card">
 
-                <div class="profile-avatar">
-                    <span id="profile-initial"></span>
+                <div class="performance-item">
+
+                    <span class="performance-label">
+                        Questões
+                    </span>
+
+                    <strong id="profile-total">
+                        -
+                    </strong>
+
                 </div>
 
-                <div class="profile-info">
 
-                    <span class="profile-label">
-                        Nome
+                <div class="performance-item">
+
+                    <span class="performance-label">
+                        Acertos
                     </span>
 
-                    <h2 id="profile-name"></h2>
+                    <strong id="profile-correct">
+                        -
+                    </strong>
+
+                </div>
 
 
-                    <span class="profile-label">
-                        E-mail
+                <div class="performance-item">
+
+                    <span class="performance-label">
+                        Erros
                     </span>
 
-                    <p id="profile-email"></p>
+                    <strong id="profile-incorrect">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div class="performance-item">
+
+                    <span class="performance-label">
+                        Aproveitamento
+                    </span>
+
+                    <strong id="profile-accuracy">
+                        -
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="dashboard-card">
+
+                <div class="page-header">
+
+                    <h2>
+                        Desempenho por tópico
+                    </h2>
+
+                    <p>
+                        Os tópicos estão ordenados do menor para o maior
+                        aproveitamento.
+                    </p>
+
+                </div>
+
+
+                <div id="topic-performance-container">
+
+                    <div class="empty-state">
+                        <strong>
+                            Carregando desempenho...
+                        </strong>
+                    </div>
 
                 </div>
 
@@ -349,8 +531,51 @@
 
         </section>
 
+        <!-- ================================= -->
+        <!-- PLANO DE ESTUDOS                  -->
+        <!-- ================================= -->
 
-        <!-- SOBRE -->
+        <section id="study-plan-section" class="content-section">
+
+            <div class="page-header">
+
+                <p class="eyebrow">
+                    APRENDIZAGEM ADAPTATIVA
+                </p>
+
+                <h1>
+                    Plano de estudos
+                </h1>
+
+                <p>
+                    Seu plano é gerado com base no seu desempenho acumulado
+                    e nas dificuldades identificadas pelo sistema.
+                </p>
+
+            </div>
+
+
+            <div id="study-plan-container" class="dashboard-card">
+
+                <div class="empty-state">
+
+                    <strong>
+                        Carregando plano...
+                    </strong>
+
+                    <span>
+                        O sistema está analisando seu histórico.
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================================= -->
+        <!-- SOBRE                              -->
+        <!-- ================================= -->
 
         <section id="about-section" class="content-section">
 
@@ -360,11 +585,13 @@
                     PROJETO
                 </p>
 
-                <h1>Sobre o Adaptive Learning</h1>
+                <h1>
+                    Sobre o Adaptive Learning
+                </h1>
 
                 <p>
-                    Um sistema de aprendizagem adaptativa baseado em
-                    inteligência artificial.
+                    Um sistema de aprendizagem adaptativa baseado
+                    em inteligência artificial.
                 </p>
 
             </div>
@@ -372,7 +599,9 @@
 
             <div class="dashboard-card">
 
-                <h2>Objetivo</h2>
+                <h2>
+                    Objetivo
+                </h2>
 
                 <p>
                     O projeto busca utilizar modelos de linguagem para
@@ -381,9 +610,11 @@
                     de estudo.
                 </p>
 
+
                 <h2 class="section-title">
                     Tecnologias
                 </h2>
+
 
                 <div class="technology-list">
 
@@ -399,10 +630,57 @@
 
                 </div>
 
+
                 <p class="project-author">
-                    Desenvolvido por <strong>Raphaell Nunes e Silva</strong><br>
-                    Instituto Federal Sul-rio-grandense (IFSul)<br>
+
+                    Desenvolvido por
+                    <strong>
+                        Raphaell Nunes e Silva
+                    </strong>
+
+                    <br>
+
+                    Instituto Federal Sul-rio-grandense (IFSul)
+
+                    <br>
+
                     Campus Bagé
+
+                </p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ================================= -->
+        <!-- ADMIN                             -->
+        <!-- ================================= -->
+
+        <section id="admin-users-section" class="content-section">
+
+            <div class="page-header">
+
+                <p class="eyebrow">
+                    ADMINISTRAÇÃO
+                </p>
+
+                <h1>
+                    Usuários
+                </h1>
+
+                <p>
+                    Gerencie as contas cadastradas no sistema.
+                </p>
+
+            </div>
+
+
+            <div id="admin-users-container" class="dashboard-card">
+
+                <p>
+                    Carregando usuários...
                 </p>
 
             </div>

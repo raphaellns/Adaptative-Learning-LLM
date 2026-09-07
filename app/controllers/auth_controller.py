@@ -50,7 +50,10 @@ def login_user(request: LoginRequest, db: Session):
             detail="E-mail ou senha inválidos."
         )
 
-    access_token = create_access_token(user.id)
+    access_token = create_access_token(
+        user.id,
+        user.role
+    )
 
     return {
     "message": "Login realizado com sucesso!",

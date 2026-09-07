@@ -1192,3 +1192,700 @@ body {
     }
 
 }
+
+.users-list {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.user-row {
+    padding: 18px 0;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+}
+
+
+.user-row:last-child {
+    border-bottom: none;
+}
+
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+
+.user-info strong {
+    font-size: 15px;
+}
+
+
+.user-info span {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+
+.user-meta {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.role-badge {
+    padding: 5px 9px;
+
+    border-radius: 6px;
+
+    font-size: 11px;
+
+    font-weight: bold;
+}
+
+
+.role-badge.admin {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+
+.role-badge.student {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+
+.user-id {
+    color: #9ca3af;
+
+    font-size: 12px;
+}
+
+
+@media (max-width: 650px) {
+
+    .user-row {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+
+    .user-meta {
+        width: 100%;
+    }
+
+}
+
+/* ============================== */
+/* ADMIN - USUÁRIOS               */
+/* ============================== */
+
+.users-list {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.user-row {
+    display: grid;
+
+    grid-template-columns: 1fr auto auto;
+
+    align-items: center;
+
+    gap: 24px;
+
+    padding: 20px 0;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+
+.user-row:last-child {
+    border-bottom: none;
+}
+
+
+.user-main {
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    min-width: 0;
+}
+
+
+.user-avatar {
+    width: 44px;
+    height: 44px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #e5e7eb;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 17px;
+    font-weight: bold;
+
+    color: #374151;
+}
+
+
+.user-avatar.admin {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+
+.user-avatar.student {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+
+    min-width: 0;
+}
+
+
+.user-info strong {
+    font-size: 15px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+.user-info span {
+    color: #6b7280;
+
+    font-size: 13px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+.user-details {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+
+.role-badge {
+    padding: 5px 9px;
+
+    border-radius: 6px;
+
+    font-size: 11px;
+
+    font-weight: bold;
+}
+
+
+.role-badge.admin {
+    background: #ede9fe;
+
+    color: #6d28d9;
+}
+
+
+.role-badge.student {
+    background: #e0f2fe;
+
+    color: #0369a1;
+}
+
+
+.user-id {
+    color: #9ca3af;
+
+    font-size: 12px;
+}
+
+
+.user-actions {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 7px;
+}
+
+
+.user-action-button {
+    border: 1px solid #d1d5db;
+
+    background: #ffffff;
+
+    color: #374151;
+
+    padding: 7px 12px;
+
+    border-radius: 6px;
+
+    font-size: 12px;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+}
+
+
+.user-action-button:hover {
+    background: #f3f4f6;
+}
+
+
+.delete-button {
+    color: #b91c1c;
+
+    border-color: #fecaca;
+}
+
+
+.delete-button:hover {
+    background: #fef2f2;
+}
+
+
+.current-user-label {
+    color: #9ca3af;
+
+    font-size: 12px;
+
+    font-weight: bold;
+}
+
+
+@media (max-width: 850px) {
+
+    .user-row {
+        grid-template-columns: 1fr auto;
+    }
+
+
+    .user-actions {
+        grid-column: 1 / -1;
+
+        justify-content: flex-start;
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .user-row {
+        grid-template-columns: 1fr;
+    }
+
+
+    .user-details {
+        justify-content: flex-start;
+    }
+
+
+    .user-actions {
+        width: 100%;
+    }
+
+
+    .delete-button {
+        width: 100%;
+    }
+
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.history-row {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 25px;
+
+    padding: 20px 0;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+
+.history-row:last-child {
+    border-bottom: none;
+}
+
+
+.history-main {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+
+.history-main strong {
+    font-size: 15px;
+}
+
+
+.history-main span {
+    color: #9ca3af;
+
+    font-size: 13px;
+}
+
+
+.history-stats {
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    color: #6b7280;
+
+    font-size: 13px;
+}
+
+
+.history-stats strong {
+    font-size: 18px;
+
+    color: #1f2937;
+}
+
+
+.history-correct {
+    color: #15803d;
+}
+
+
+.history-incorrect {
+    color: #b91c1c;
+}
+
+
+@media (max-width: 750px) {
+
+    .history-row {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+
+    .history-stats {
+        flex-wrap: wrap;
+    }
+
+}
+
+.topic-performance-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 24px;
+}
+
+
+.topic-performance-row {
+    padding-bottom: 20px;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+
+.topic-performance-row:last-child {
+    border-bottom: none;
+
+    padding-bottom: 0;
+}
+
+
+.topic-performance-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin-bottom: 10px;
+}
+
+
+.topic-performance-header strong {
+    font-size: 15px;
+}
+
+
+.topic-performance-header span {
+    font-weight: bold;
+
+    font-size: 14px;
+}
+
+
+.progress-bar {
+    width: 100%;
+
+    height: 8px;
+
+    background: #e5e7eb;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+
+.progress-fill {
+    height: 100%;
+
+    background: #1f2937;
+
+    border-radius: 10px;
+
+    transition: width 0.3s ease;
+}
+
+
+.topic-performance-footer {
+    display: flex;
+
+    gap: 15px;
+
+    margin-top: 8px;
+
+    color: #9ca3af;
+
+    font-size: 12px;
+}
+
+
+@media (max-width: 600px) {
+
+    .topic-performance-footer {
+        flex-wrap: wrap;
+    }
+
+}
+
+/* ============================== */
+/* INÍCIO - DESEMPENHO             */
+/* ============================== */
+
+.home-performance {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 10px;
+
+    margin-top: 22px;
+}
+
+
+.home-performance-item {
+    padding: 12px;
+
+    background: #f9fafb;
+
+    border-radius: 8px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+
+.home-performance-item span {
+    color: #9ca3af;
+
+    font-size: 11px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+}
+
+
+.home-performance-item strong {
+    font-size: 20px;
+}
+
+
+/* ============================== */
+/* INÍCIO - PRIORIDADES            */
+/* ============================== */
+
+.home-priority-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+    margin-top: 20px;
+}
+
+
+.home-priority-row {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 11px 12px;
+
+    background: #f9fafb;
+
+    border-radius: 8px;
+}
+
+
+.home-priority-row div {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+
+.home-priority-row strong {
+    font-size: 13px;
+}
+
+
+.home-priority-row span {
+    color: #9ca3af;
+
+    font-size: 11px;
+}
+
+
+.home-priority-row>strong {
+    font-size: 16px;
+}
+
+
+/* ============================== */
+/* PLANO DE ESTUDOS                */
+/* ============================== */
+
+.study-plan-content {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+
+.study-plan-block {
+    padding: 20px;
+
+    background: #f9fafb;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 10px;
+}
+
+
+.study-plan-block h3 {
+    margin-bottom: 12px;
+
+    font-size: 17px;
+}
+
+
+.study-plan-text {
+    color: #4b5563;
+
+    line-height: 1.7;
+
+    white-space: pre-wrap;
+}
+
+
+.study-plan-list {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+
+.study-plan-item {
+    padding: 12px 14px;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 8px;
+
+    color: #4b5563;
+
+    line-height: 1.6;
+}
+
+
+@media (max-width: 650px) {
+
+    .home-performance {
+        grid-template-columns: 1fr;
+    }
+
+}
