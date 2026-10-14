@@ -3,7 +3,11 @@ from pathlib import Path
 import fitz
 
 
-def pdf_to_images(pdf_path: str, output_dir: str):
+def pdf_to_images(
+    pdf_path: str,
+    output_dir: str,
+    dpi: int = 200
+):
     pdf = fitz.open(pdf_path)
 
     output_path = Path(output_dir)
@@ -12,7 +16,7 @@ def pdf_to_images(pdf_path: str, output_dir: str):
     generated_images = []
 
     for page_number, page in enumerate(pdf):
-        pixmap = page.get_pixmap(dpi=200)
+        pixmap = page.get_pixmap(dpi=dpi)
 
         image_path = output_path / f"page_{page_number + 1}.png"
 
