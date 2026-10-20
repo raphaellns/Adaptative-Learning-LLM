@@ -13,6 +13,134 @@ body {
 }
 
 
+.ocr-group {
+    border-top: 1px solid #e5e7eb;
+    margin-top: 20px;
+    padding-top: 20px;
+}
+
+
+.field-help,
+.ocr-status {
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.45;
+    margin-top: 8px;
+}
+
+
+.ocr-controls {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+
+.ocr-controls input,
+.ocr-controls select {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #374151;
+    padding: 10px;
+}
+
+
+.ocr-controls .secondary-button {
+    margin: 0;
+}
+
+
+.answer-image-preview {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    cursor: crosshair;
+    display: block;
+    height: auto;
+    margin-top: 14px;
+    max-height: 70vh;
+    max-width: 100%;
+    touch-action: none;
+}
+
+
+.crop-controls {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+
+.crop-controls[hidden],
+.answer-image-preview[hidden] {
+    display: none;
+}
+
+
+.crop-controls span {
+    color: #4b5563;
+    font-size: 14px;
+    margin-right: 4px;
+}
+
+
+.crop-controls .secondary-button {
+    margin: 0;
+}
+
+
+.transcribe-answer:disabled,
+.use-image-crop:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+
+.analysis-duration {
+    color: #6b7280;
+    font-size: 14px;
+    margin: 12px 0 24px;
+    text-align: center;
+}
+
+
+.study-plan-item {
+    border-top: 1px solid #e5e7eb;
+    padding: 18px 0;
+}
+
+
+.study-plan-item:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+
+.study-plan-item h3 {
+    margin: 0;
+}
+
+
+.study-plan-item p {
+    line-height: 1.5;
+}
+
+
+.study-plan-item ul {
+    margin: 8px 0 14px;
+}
+
+
+.study-plan-meta {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+
 /* TOPBAR */
 
 .topbar {
@@ -1431,6 +1559,13 @@ body {
 }
 
 
+.role-badge.teacher {
+    background: #dcfce7;
+
+    color: #15803d;
+}
+
+
 .user-id {
     color: #9ca3af;
 
@@ -1470,6 +1605,170 @@ body {
 
 .user-action-button:hover {
     background: #f3f4f6;
+}
+
+
+.role-select {
+    max-width: 125px;
+    padding: 7px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #374151;
+}
+
+
+.assessment-section {
+    margin-top: 28px;
+}
+
+
+.assessment-section > h2,
+.submission-results > h3 {
+    margin-bottom: 14px;
+}
+
+
+.assessment-list {
+    display: grid;
+    gap: 12px;
+}
+
+
+.assessment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+
+.assessment-item > div {
+    display: grid;
+    gap: 6px;
+}
+
+
+.assessment-item span,
+.submission-card small {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+
+.assessment-item .primary-button,
+.assessment-item .secondary-button {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+
+.teacher-question-card {
+    margin: 16px 0;
+    padding: 18px;
+    background: #f9fafb;
+    box-shadow: none;
+}
+
+
+.teacher-question-card .question-card-header {
+    margin-bottom: 14px;
+}
+
+
+.teacher-question-card .form-group:last-child {
+    margin-bottom: 0;
+}
+
+
+.assessment-question-text {
+    margin: 0 0 20px;
+    padding: 16px;
+    border-radius: 8px;
+    background: #f9fafb;
+    line-height: 1.6;
+    white-space: normal;
+}
+
+
+.student-question-card .primary-button:disabled,
+.assessment-form .primary-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}
+
+
+.feedback-result,
+.submission-card {
+    margin-top: 16px;
+    padding: 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    line-height: 1.6;
+}
+
+
+.feedback-result.correct {
+    border-color: #86efac;
+    background: #f0fdf4;
+}
+
+
+.feedback-result.incorrect {
+    border-color: #fca5a5;
+    background: #fef2f2;
+}
+
+
+.feedback-result h4 {
+    margin-bottom: 8px;
+}
+
+
+.feedback-result p,
+.submission-card p {
+    margin-top: 8px;
+    overflow-wrap: anywhere;
+}
+
+
+.feedback-result small {
+    display: block;
+    margin-top: 12px;
+    color: #6b7280;
+}
+
+
+.submission-card {
+    margin: 12px 0;
+}
+
+
+.submission-error {
+    margin-top: 12px;
+    color: #b91c1c;
+}
+
+
+@media (max-width: 700px) {
+    .assessment-item {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .assessment-item .primary-button,
+    .assessment-item .secondary-button {
+        width: 100%;
+    }
+
+    .user-actions {
+        flex-wrap: wrap;
+    }
 }
 
 

@@ -1,4 +1,5 @@
 import json
+import time
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -16,8 +17,13 @@ from app.study_plan import generate_study_plan
 def analyze_and_save_exam(
     request: ExamRequest,
     user_id: int,
-    db: Session
+    db: Session,
+    *,
+    commit: bool = True,
+    generate_plan: bool = True,
 ):
+
+    started_at = time.perf_counter()
 
     if not request.questions:
 
@@ -37,6 +43,8 @@ def analyze_and_save_exam(
 
 
     current_results = []
+    exam_question_ids = []
+    analysis_started_at = time.perf_counter()
 
 
     for question_data in request.questions:
@@ -58,6 +66,7 @@ def analyze_and_save_exam(
         db.add(question)
 
         db.flush()
+        exam_question_ids.append(question.id)
 
 
         analysis = Analysis(
@@ -78,8 +87,15 @@ def analyze_and_save_exam(
         current_results.append(result)
 
 
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
 
+    question_analysis_seconds = time.perf_counter() - analysis_started_at
+
+
+    profile_started_at = time.perf_counter()
 
     historical_analyses = (
         db.query(Analysis)
@@ -131,19 +147,36 @@ def analyze_and_save_exam(
     )
 
 
-    study_plan = generate_study_plan(
-        profile,
-        priorities,
-        historical_results
-    )
+    profile_seconds = time.perf_counter() - profile_started_at
+
+
+    study_plan_started_at = time.perf_counter()
+
+    if generate_plan and any(not result["correta"] for result in historical_results):
+        study_plan = generate_study_plan(
+            profile,
+            priorities,
+            historical_results
+        )
+    else:
+        study_plan = {"plano": []}
+
+    study_plan_seconds = time.perf_counter() - study_plan_started_at
 
 
     return {
         "exam_id": exam.id,
+        "exam_question_ids": exam_question_ids,
         "questions": current_results,
         "profile": profile,
         "priorities": priorities,
-        "study_plan": study_plan
+        "study_plan": study_plan,
+        "timings": {
+            "question_analysis_seconds": round(question_analysis_seconds, 2),
+            "profile_seconds": round(profile_seconds, 2),
+            "study_plan_seconds": round(study_plan_seconds, 2),
+            "total_seconds": round(time.perf_counter() - started_at, 2),
+        },
     }
 
 

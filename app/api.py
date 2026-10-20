@@ -8,12 +8,14 @@ from app.routes.exam import router as exam_router
 from app.routes.admin import router as admin_router
 from app.routes.history import router as history_router
 from app.routes.profile import router as profile_router
+from app.routes.ocr import router as ocr_router
+from app.routes.assessments import router as assessments_router
 
 
 app = FastAPI(
     title="Adaptive Learning API",
     description="Backend do sistema de aprendizagem adaptativa",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 
@@ -35,6 +37,8 @@ app.include_router(exam_router)
 app.include_router(admin_router)
 app.include_router(history_router)
 app.include_router(profile_router)
+app.include_router(ocr_router)
+app.include_router(assessments_router)
 
 class QuestionRequest(BaseModel):
     question: str

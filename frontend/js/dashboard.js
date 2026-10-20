@@ -213,6 +213,17 @@ async function loadAdminUsers(token) {
 
                         <div class="user-actions">
 
+                            ${user.role !== "ADMIN"
+                ? `
+                                    <select class="role-select" data-user-id="${user.id}" aria-label="Função de ${escapeHtml(user.name)}">
+                                        <option value="STUDENT" ${user.role === "STUDENT" ? "selected" : ""}>Estudante</option>
+                                        <option value="TEACHER" ${user.role === "TEACHER" ? "selected" : ""}>Professor</option>
+                                    </select>
+                                    <button type="button" class="user-action-button role-button" data-user-id="${user.id}">Salvar função</button>
+                                  `
+                : ""
+            }
+
                             ${user.id === currentUserId
                 ? `
                                     <span class="current-user-label">
@@ -243,6 +254,7 @@ async function loadAdminUsers(token) {
 
 
         registerDeleteActions();
+        registerRoleActions();
 
 
     } catch (error) {
@@ -917,6 +929,39 @@ function registerDeleteActions() {
 }
 
 
+function registerRoleActions() {
+    document.querySelectorAll(".role-button").forEach(button => {
+        button.addEventListener("click", async () => {
+            const userId = button.dataset.userId;
+            const role = document.querySelector(`.role-select[data-user-id="${userId}"]`).value;
+            const token = localStorage.getItem("access_token");
+            button.disabled = true;
+            try {
+                const response = await fetch(`${API_URL}/admin/users/${userId}/role`, {
+                    method: "PATCH",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ role }),
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    alert(data.detail || "Não foi possível alterar a função.");
+                    return;
+                }
+                await loadAdminUsers(token);
+            } catch (error) {
+                console.error(error);
+                alert("Não foi possível conectar com a API.");
+            } finally {
+                button.disabled = false;
+            }
+        });
+    });
+}
+
+
 async function loadCurrentUser() {
 
     const token =
@@ -969,8 +1014,10 @@ async function loadCurrentUser() {
          * Carregamento dos dados
          */
 
-        loadHistory(token);
-        loadPerformance(token);
+        if (user.role !== "TEACHER") {
+            loadHistory(token);
+            loadPerformance(token);
+        }
 
 
         userName.textContent =
@@ -979,6 +1026,46 @@ async function loadCurrentUser() {
         userNameShort.textContent =
             user.name;
 
+        const examMenuLabel = document.querySelector('.menu-item[data-section="exam"] span:last-child');
+        const homeExamTitle = startExamButton?.parentElement?.querySelector("h3");
+        const homeExamDescription = startExamButton?.parentElement?.querySelector("p");
+        if (user.role === "TEACHER" || user.role === "ADMIN") {
+            if (examMenuLabel) examMenuLabel.textContent = "Gerenciar avaliações";
+            if (homeExamTitle) homeExamTitle.textContent = "Publicar uma avaliação";
+            if (homeExamDescription) homeExamDescription.textContent = "Cadastre questões e gabaritos oficiais e acompanhe as respostas dos estudantes.";
+            if (startExamButton) startExamButton.textContent = "Gerenciar avaliações";
+        } else {
+            if (examMenuLabel) examMenuLabel.textContent = "Responder avaliação";
+            if (homeExamTitle) homeExamTitle.textContent = "Responder uma questão";
+            if (homeExamDescription) homeExamDescription.textContent = "Escolha uma avaliação, envie uma foto da resposta e receba uma correção com inteligência artificial.";
+            if (startExamButton) startExamButton.textContent = "Ver avaliações";
+        }
+
+
+        if (user.role === "TEACHER") {
+            ["history", "profile", "study-plan", "about"].forEach(sectionName => {
+                const menuItem = document.querySelector(
+                    `.menu-item[data-section="${sectionName}"]`
+                );
+                if (menuItem) menuItem.style.display = "none";
+            });
+
+            [
+                "home-student-performance-card",
+                "home-study-priorities-card",
+                "home-learning-info"
+            ].forEach(elementId => {
+                const element = document.getElementById(elementId);
+                if (element) element.style.display = "none";
+            });
+
+            const welcomeEyebrow = document.getElementById("welcome-eyebrow");
+            const welcomeText = document.getElementById("welcome-text");
+            if (welcomeEyebrow) welcomeEyebrow.textContent = "ÁREA DO PROFESSOR";
+            if (welcomeText) {
+                welcomeText.textContent = "Publique avaliações com gabarito e acompanhe as respostas dos estudantes.";
+            }
+        }
 
         if (user.role === "ADMIN") {
 
@@ -1016,6 +1103,11 @@ menuItems.forEach(item => {
 
         const section =
             item.dataset.section;
+
+        if (section === "exam") {
+            window.location.href = "exam.html";
+            return;
+        }
 
         showSection(section);
 

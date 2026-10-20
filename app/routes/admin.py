@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.auth import bearer_scheme, get_user_id_from_token
@@ -11,6 +12,10 @@ router = APIRouter(
     prefix="/admin",
     tags=["Administração"]
 )
+
+
+class RoleUpdateRequest(BaseModel):
+    role: str = Field(pattern="^(STUDENT|TEACHER)$")
 
 
 def get_admin_user(
@@ -101,3 +106,25 @@ def delete_user(
     return {
         "message": "Usuário excluído com sucesso."
     }
+
+
+@router.patch("/users/{user_id}/role")
+def update_user_role(
+    user_id: int,
+    request: RoleUpdateRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+):
+    get_admin_user(credentials, db)
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    if user.role == "ADMIN":
+        raise HTTPException(
+            status_code=400,
+            detail="A função de administrador não pode ser alterada por esta tela.",
+        )
+
+    user.role = request.role
+    db.commit()
+    return {"id": user.id, "name": user.name, "role": user.role}

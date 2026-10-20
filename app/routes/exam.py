@@ -34,6 +34,12 @@ def analyze_exam(
             detail="Usuário não encontrado."
         )
 
+    if user.role not in {"ADMIN", "TEACHER"}:
+        raise HTTPException(
+            status_code=403,
+            detail="A correção de respostas de estudantes deve usar uma avaliação publicada.",
+        )
+
     return analyze_and_save_exam(
         request,
         user_id,

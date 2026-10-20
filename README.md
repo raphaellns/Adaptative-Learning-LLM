@@ -210,6 +210,46 @@ The frontend will be available at:
 http://127.0.0.1:5500
 ```
 
+## Fluxo funcional de uma questão
+
+O protótipo agora separa quem publica a questão de quem responde:
+
+1. Uma conta com papel **Professor** cadastra uma avaliação, o enunciado e o gabarito oficial.
+2. A conta de **Estudante** vê apenas as avaliações publicadas e o enunciado. O gabarito permanece no servidor.
+3. O estudante envia uma foto da resposta, escolhe Qwen-VL para manuscrito/código ou Tesseract para texto impresso e pode recortar a imagem.
+4. A transcrição aparece em um campo editável. O estudante revisa o texto e envia para correção.
+5. A API busca o gabarito salvo, chama o analisador, grava a resposta e a análise no histórico do estudante e devolve o feedback.
+
+O envio de uma resposta usa `POST /assessments/{assessment_id}/questions/{question_id}/submit`. A rota de estudante não aceita gabarito no corpo. A rota manual antiga `POST /exam/analyze` fica restrita a professores e administradores.
+
+As tabelas `assessments`, `assessment_questions` e `assessment_submissions` são uma migração explícita: a API não tenta criar tabelas durante a inicialização, pois a conta de execução não precisa ter permissão de DDL. O arquivo `database/schema.sql` inclui essas tabelas para instalações novas. Para uma base existente, a pessoa responsável pelo banco deve executar `database/migrations/001_assessment_workflow.sql` como proprietária do schema. A migração concede à conta indicada acesso às tabelas novas. A conexão da API continua configurada em `DATABASE_URL`.
+
+## Testar no navegador
+
+1. Em uma sessão SQL com permissão de criação no schema `public`, execute a migração. Se usar `psql`, informe `app_role` com o nome de usuário que aparece na URL `DATABASE_URL` da API:
+
+   ```bash
+   psql "$DATABASE_OWNER_URL" -v app_role='USUARIO_DA_API' -f database/migrations/001_assessment_workflow.sql
+   ```
+
+   `DATABASE_OWNER_URL` precisa apontar para a mesma base, usando a conta proprietária do schema. A API não precisa usar essa conta.
+2. Inicie PostgreSQL, a API e o servidor do diretório `frontend`, como descrito acima.
+3. Entre com a conta que já possui papel `ADMIN`. Em **Usuários**, altere uma conta de estudante para **Professor** e salve.
+4. Saia, entre com essa conta de professor e abra **Gerenciar avaliações**. Cadastre um título, um enunciado e o gabarito oficial e publique.
+5. Saia e entre com uma conta de estudante. Abra **Responder avaliação**, selecione a avaliação, carregue uma foto da resposta e recorte a área relevante.
+6. Transcreva, revise/edite o texto e envie para correção. Confira o feedback na tela e depois abra **Histórico**.
+7. Entre novamente como professor e use **Ver respostas** na avaliação para consultar o envio e a correção.
+
+Contas novas sempre começam como `STUDENT`; não é possível escolher `TEACHER` ou `ADMIN` durante o cadastro. Se ainda não existir uma conta administradora na base, a primeira conta `ADMIN` precisa ser provisionada diretamente no banco conforme o procedimento de desenvolvimento do projeto.
+
+O OCR aceita PNG, JPEG e WebP de até 10 MB. A rota `POST /ocr/transcribe` exige autenticação e recebe os campos multipart `file` e `engine` (`vision` ou `tesseract`). A correção de cada resposta usa o modelo de análise já configurado no backend. O plano de estudos não é recalculado a cada envio, para evitar uma chamada extra de LLM no fluxo de correção.
+
+Nesta etapa, o professor cadastra o enunciado e o gabarito manualmente e o estudante responde uma questão por vez. Importar uma prova inteira e extrair enunciado/gabarito automaticamente ficam para uma etapa posterior.
+
+Qwen-VL processing reports the total request time, model load time, image/prompt processing time, and text generation time separately. The first request after a model unload includes the load; the model is kept warm for 15 minutes after an OCR request. Compare a cold request with a second request using a similarly sized crop to measure warm performance.
+
+Tesseract also requires the system executable and Portuguese language data. On Debian or Ubuntu, install `tesseract-ocr` and `tesseract-ocr-por` if they are not already present.
+
 ## Academic Context
 
 This project is being developed as an academic project at the **Instituto Federal Sul-rio-grandense (IFSul), Campus Bagé**, with the objective of exploring the application of Large Language Models and adaptive learning techniques in programming education.
