@@ -367,7 +367,7 @@ function renderStudentQuestion(container, assessmentId, question) {
     let imageToTranscribe = null;
     const transcribeButton = card.querySelector(".transcribe-answer");
     transcribeButton.addEventListener("click", async () => {
-        await transcribeAnswerImage(card, imageToTranscribe);
+        await transcribeAnswerImage(card, imageToTranscribe, question);
     });
     bindAnswerImageCropper(card, file => {
         imageToTranscribe = file;
@@ -537,7 +537,7 @@ function bindAnswerImageCropper(container, onImageReady) {
     }
 }
 
-async function transcribeAnswerImage(card, image) {
+async function transcribeAnswerImage(card, image, question) {
     const status = card.querySelector(".ocr-status");
     const answerInput = card.querySelector(".student-answer");
     const button = card.querySelector(".transcribe-answer");
@@ -547,17 +547,20 @@ async function transcribeAnswerImage(card, image) {
     }
     button.disabled = true;
     status.textContent = "Lendo a imagem...";
-    const formData = new FormData();
-    formData.append("file", image);
-    const engine = card.querySelector(".ocr-engine").value;
-    formData.append("engine", engine);
-    formData.append("purpose", "student_answer");
-    formData.append("question_context", question.question || "");
+    const controller = new AbortController();
+    const abortTimer = setTimeout(() => controller.abort(), 180000);
     try {
+        const engine = card.querySelector(".ocr-engine").value;
+        const formData = new FormData();
+        formData.append("file", image);
+        formData.append("engine", engine);
+        formData.append("purpose", "student_answer");
+        formData.append("question_context", question?.question || "");
         const response = await fetch(`${API_URL}/ocr/transcribe`, {
             method: "POST",
             headers: { "Authorization": `Bearer ${token}` },
             body: formData,
+            signal: controller.signal,
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(errorMessage(data));
@@ -576,8 +579,11 @@ async function transcribeAnswerImage(card, image) {
             status.textContent = `Resposta separada do enunciado em ${elapsed} s${breakdown}. Revise antes de enviar.`;
         }
     } catch (error) {
-        status.textContent = error.message || "Não foi possível conectar com a API.";
+        status.textContent = error.name === "AbortError"
+            ? "A leitura passou de 3 minutos e foi cancelada. Veja o terminal da API ou recorte só a sua resposta."
+            : (error.message || "Não foi possível conectar com a API.");
     } finally {
+        clearTimeout(abortTimer);
         button.disabled = false;
     }
 }

@@ -75,6 +75,14 @@ def transcribe_answer_image(
         )
     except HTTPException:
         raise
+    except TimeoutError as error:
+        raise HTTPException(
+            status_code=504,
+            detail=(
+                "O modelo demorou demais para ler a imagem. "
+                "Tente recortar só a sua resposta ou envie uma foto mais próxima."
+            ),
+        ) from error
     except Exception as error:
         print(f"Erro na transcrição OCR: {error}")
         raise HTTPException(
