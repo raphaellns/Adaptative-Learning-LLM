@@ -4,22 +4,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/theme-init.js"></script>
 
-    <title>Cadastro | Adaptive Learning</title>
+    <title>Criar conta | Adaptive Learning</title>
 
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/product.css">
 </head>
 
 <body>
 
     <main class="auth-container">
 
+        <section class="auth-intro" aria-label="Sobre o Adaptive Learning">
+            <a class="auth-brand" href="login.html"><span class="brand-mark">A</span><span>Adaptive Learning</span></a>
+            <div class="auth-intro-copy">
+                <p class="eyebrow">SEU PRÓXIMO PASSO COMEÇA AQUI</p>
+                <h2>Aprenda no seu ritmo. Evolua com clareza.</h2>
+                <p>Crie sua conta para responder avaliações, acompanhar sua evolução e receber recomendações alinhadas às suas dificuldades.</p>
+                <div class="auth-feature"><span>01</span><div><strong>Histórico organizado</strong><small>Suas correções ficam reunidas.</small></div></div>
+                <div class="auth-feature"><span>02</span><div><strong>Estudo adaptativo</strong><small>Prioridades baseadas no seu percurso.</small></div></div>
+            </div>
+            <p class="auth-footnote">Projeto acadêmico · IFSul Campus Bagé</p>
+        </section>
+
         <section class="auth-card">
 
-            <h1>Adaptive Learning</h1>
+            <p class="eyebrow auth-form-eyebrow">COMECE SUA JORNADA</p>
+            <h1>Criar sua conta</h1>
 
             <p class="auth-subtitle">
-                Crie sua conta
+                Leva só um instante para começar.
             </p>
 
             <form id="register-form">
@@ -78,10 +93,14 @@
                 <a href="login.html">Entrar</a>
             </p>
 
+            <p class="auth-privacy">Seus dados de acesso são usados para manter seu histórico individual.</p>
+
         </section>
 
     </main>
 
+    <script defer src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/register.js"></script>
 
 </body>

@@ -4,10 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/theme-init.js"></script>
 
-    <title>Dashboard | Adaptive Learning</title>
+    <title>Painel | Adaptive Learning</title>
 
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/product.css">
 </head>
 
 <body>
@@ -25,11 +27,19 @@
 
         <div class="topbar-title">
             <span>Adaptive Learning</span>
+            <span class="topbar-context">Seu espaço de aprendizagem</span>
         </div>
+
+        <label class="nav-search-wrap" for="nav-search">
+            <span aria-hidden="true">⌕</span>
+            <input id="nav-search" type="search" placeholder="Ir para uma área…" autocomplete="off">
+            <kbd>Ctrl K</kbd>
+        </label>
 
 
         <div class="topbar-user">
-            <span id="user-name-short"></span>
+            <span class="user-avatar" id="user-avatar" aria-hidden="true">AL</span>
+            <span class="user-topbar-copy"><strong id="user-name-short"></strong><small id="user-role-label">Conta</small></span>
         </div>
 
     </header>
@@ -40,45 +50,52 @@
     <aside id="sidebar" class="sidebar">
 
         <div class="sidebar-header">
-
-            <h2>Adaptive Learning</h2>
-
+            <span class="brand-mark" aria-hidden="true">A</span>
+            <div><h2>Adaptive Learning</h2><span>Aprender com propósito</span></div>
+            <button id="sidebar-close" class="sidebar-close" type="button" aria-label="Fechar menu">×</button>
         </div>
+
+        <label class="sidebar-search" for="sidebar-nav-search">
+            <span aria-hidden="true">⌕</span>
+            <input id="sidebar-nav-search" type="search" placeholder="Buscar no menu" autocomplete="off">
+        </label>
 
 
         <nav class="sidebar-nav">
 
+            <span class="nav-group-label">ESPAÇO DE TRABALHO</span>
+
             <button class="menu-item active" data-section="home" type="button">
-                <span>🏠</span>
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7h-4v7H4a1 1 0 0 1-1-1z"/></svg></span>
                 <span>Início</span>
             </button>
 
 
             <button class="menu-item" data-section="exam" type="button">
-                <span>📝</span>
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4h8l4 4v12H4V4z"/><path d="M8 12h8M8 16h8M15 4v5h5"/></svg></span>
                 <span>Avaliações</span>
             </button>
 
 
             <button class="menu-item" data-section="history" type="button">
-                <span>📊</span>
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h17"/><path d="M8 15v-4M13 15V7M18 15V9"/></svg></span>
                 <span>Histórico</span>
             </button>
 
 
             <button class="menu-item" data-section="profile" type="button">
-                <span>👤</span>
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
                 <span>Meu perfil</span>
             </button>
 
             <button class="menu-item" data-section="study-plan" type="button">
-                <span>📚</span>
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 5.5v13A2.5 2.5 0 0 1 6.5 16H20"/></svg></span>
                 <span>Plano de estudos</span>
             </button>
 
 
             <button class="menu-item" data-section="about" type="button">
-                <span>ℹ️</span>
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></span>
                 <span>Sobre o projeto</span>
             </button>
 
@@ -91,8 +108,14 @@
 
             <button id="admin-users-menu" class="menu-item" data-section="admin-users" type="button"
                 style="display: none;">
-                <span>👑</span>
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 7 5 4 4-7 4 7 5-4-2 12H5z"/></svg></span>
                 <span>Usuários</span>
+            </button>
+
+            <span class="nav-group-label nav-group-label-secondary">PREFERÊNCIAS</span>
+            <button class="menu-item" data-section="settings" type="button">
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.2 1-1.2 2.1-1.5-.5a8 8 0 0 1-1.5.9l-.3 1.6h-2.4l-.3-1.6a8 8 0 0 1-1.5-.9l-1.5.5-1.2-2.1 1.2-1a7 7 0 0 1 0-1.8l-1.2-1 1.2-2.1 1.5.5a8 8 0 0 1 1.5-.9l.3-1.6h2.4l.3 1.6a8 8 0 0 1 1.5.9l1.5-.5 1.2 2.1-1.2 1a7 7 0 0 1 0 1.8z"/></svg></span>
+                <span>Configurações</span>
             </button>
 
         </nav>
@@ -101,7 +124,7 @@
         <div class="sidebar-footer">
 
             <button id="logout-button" class="menu-item logout" type="button">
-                <span>🚪</span>
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/></svg></span>
                 <span>Sair</span>
             </button>
 
@@ -333,6 +356,54 @@
 
         </section>
 
+        <section id="settings-section" class="content-section">
+            <div class="page-header">
+                <p class="eyebrow">PREFERÊNCIAS DA CONTA</p>
+                <h1>Configurações</h1>
+                <p>Personalize a aparência e a leitura do Adaptive Learning neste navegador.</p>
+            </div>
+
+            <div class="settings-layout">
+                <div class="settings-main-column">
+                    <section class="settings-card" aria-labelledby="appearance-title">
+                        <div class="settings-card-heading"><span class="settings-icon" aria-hidden="true">◐</span><div><h2 id="appearance-title">Aparência</h2><p>Escolha como o sistema acompanha sua preferência de tela.</p></div></div>
+                        <div class="settings-control-row"><div><label for="theme-setting">Tema</label><small>Você pode acompanhar o tema do dispositivo.</small></div><select id="theme-setting"><option value="system">Automático</option><option value="light">Claro</option><option value="dark">Escuro</option></select></div>
+                    </section>
+
+                    <section class="settings-card" aria-labelledby="accessibility-title">
+                        <div class="settings-card-heading"><span class="settings-icon" aria-hidden="true">Aa</span><div><h2 id="accessibility-title">Leitura e acessibilidade</h2><p>Preferências que ajudam a deixar a interface mais confortável.</p></div></div>
+                        <div class="settings-control-row"><div><label for="text-scale-setting">Tamanho da interface</label><small>Aumenta textos e controles para facilitar a leitura.</small></div><select id="text-scale-setting"><option value="normal">Padrão</option><option value="large">Grande</option><option value="larger">Muito grande</option></select></div>
+                        <div class="settings-control-row"><div><label for="contrast-setting">Alto contraste</label><small>Reforça contornos e diferenças entre elementos.</small></div><label class="switch"><input id="contrast-setting" type="checkbox"><span class="switch-track" aria-hidden="true"></span><span class="sr-only">Ativar alto contraste</span></label></div>
+                        <div class="settings-control-row"><div><label for="motion-setting">Reduzir animações</label><small>Desativa movimentos decorativos da interface.</small></div><label class="switch"><input id="motion-setting" type="checkbox"><span class="switch-track" aria-hidden="true"></span><span class="sr-only">Reduzir animações</span></label></div>
+                    </section>
+
+                    <section class="settings-card" aria-labelledby="language-title">
+                        <div class="settings-card-heading"><span class="settings-icon" aria-hidden="true">文</span><div><h2 id="language-title">Idioma</h2><p>Idioma atual da interface.</p></div></div>
+                        <div class="settings-control-row"><div><label for="language-setting">Idioma</label><small>Outros idiomas serão disponibilizados quando toda a interface estiver traduzida.</small></div><select id="language-setting" disabled><option>Português (Brasil)</option></select></div>
+                    </section>
+
+                    <section class="settings-card settings-reset-card" aria-labelledby="reset-settings-title">
+                        <div><h2 id="reset-settings-title">Restaurar preferências</h2><p>Volta ao tema automático, tamanho padrão e acessibilidade desativada.</p></div>
+                        <button id="reset-settings-button" class="secondary-button" type="button">Restaurar padrão</button>
+                    </section>
+                    <p id="settings-status" class="settings-status" role="status" aria-live="polite"></p>
+                </div>
+
+                <aside class="settings-side-column">
+                    <section class="settings-card account-settings-card" aria-labelledby="account-settings-title">
+                        <p class="eyebrow">SUA CONTA</p><h2 id="account-settings-title">Dados do perfil</h2>
+                        <dl class="account-details"><div><dt>Nome</dt><dd id="settings-account-name">Carregando…</dd></div><div><dt>E-mail</dt><dd id="settings-account-email">—</dd></div><div><dt>Perfil</dt><dd id="settings-account-role">—</dd></div></dl>
+                    </section>
+                    <section class="settings-card shortcuts-card" aria-labelledby="shortcuts-title">
+                        <p class="eyebrow">ATALHOS</p><h2 id="shortcuts-title">Navegue mais rápido</h2>
+                        <div class="shortcut-row"><span>Abrir busca do menu</span><kbd>Ctrl K</kbd></div>
+                        <div class="shortcut-row"><span>Fechar menu ou busca</span><kbd>Esc</kbd></div>
+                        <p class="settings-footnote">As preferências ficam salvas somente neste navegador.</p>
+                    </section>
+                </aside>
+            </div>
+        </section>
+
 
 
         <!-- ================================= -->
@@ -410,11 +481,10 @@
 
 
             <div id="history-container" class="dashboard-card">
-
-                <p>
-                    Carregando histórico...
-                </p>
-
+                <div class="history-loading" role="status">
+                    <span class="loading-spinner" aria-hidden="true"></span>
+                    <div><strong>Carregando histórico</strong><span>Buscando suas tentativas recentes.</span></div>
+                </div>
             </div>
 
         </section>
@@ -438,7 +508,7 @@
                 </h1>
 
                 <p>
-                    Veja seu desempenho acumulado em cada tópico.
+                    Este perfil considera todas as respostas das suas avaliações. Use o Histórico para comparar cada tentativa e acompanhar sua evolução.
                 </p>
 
             </div>
@@ -589,65 +659,72 @@
                 </h1>
 
                 <p>
-                    Um sistema de aprendizagem adaptativa baseado
-                    em inteligência artificial.
+                    Como a plataforma transforma respostas de avaliações em feedback e prioridades de estudo.
                 </p>
 
             </div>
 
+            <div class="about-overview-grid">
+                <article class="dashboard-card about-feature about-feature-primary">
+                    <p class="eyebrow">PROPÓSITO DO TCC</p>
+                    <h2>Feedback que ajuda o aluno a saber o próximo passo</h2>
+                    <p>O Adaptive Learning é um protótipo acadêmico para apoiar o ensino de lógica e programação em C. Em vez de guardar apenas uma nota, ele analisa a resposta, explica o principal ponto a revisar e acompanha como o desempenho muda entre as tentativas.</p>
+                    <div class="about-highlight"><strong>O foco</strong><span>Usar evidências das respostas para orientar o estudo, mantendo o professor responsável pela avaliação e pelos critérios.</span></div>
+                </article>
 
-            <div class="dashboard-card">
+                <article class="dashboard-card about-feature about-roles-card">
+                    <p class="eyebrow">UM FLUXO PARA CADA PAPEL</p>
+                    <h2>Professor publica. Aluno responde.</h2>
+                    <ul class="about-role-list">
+                        <li><strong>Professor</strong><span>Cria avaliações, informa o gabarito ou critérios privados e acompanha as respostas recebidas.</span></li>
+                        <li><strong>Aluno</strong><span>Envia uma foto ou prova, revisa a transcrição, solicita a correção e consulta o feedback.</span></li>
+                        <li><strong>Administrador</strong><span>Gerencia usuários e atribui os papéis de estudante e professor.</span></li>
+                    </ul>
+                </article>
+            </div>
 
-                <h2>
-                    Objetivo
-                </h2>
+            <article class="dashboard-card about-process-card">
+                <div class="about-section-heading"><div><p class="eyebrow">DA RESPOSTA AO ESTUDO</p><h2>Como funciona</h2></div><span>Fluxo atual do protótipo</span></div>
+                <ol class="about-process-list">
+                    <li><span>01</span><div><strong>Avaliação</strong><p>O professor cadastra questões e critérios de correção. O gabarito fica no servidor.</p></div></li>
+                    <li><span>02</span><div><strong>Imagem e revisão</strong><p>O aluno envia uma página ou foto, confere o texto transcrito e pode corrigi-lo antes de enviar.</p></div></li>
+                    <li><span>03</span><div><strong>Correção e feedback</strong><p>O modelo compara a resposta com os critérios, identifica tópico e erro principal e explica o resultado.</p></div></li>
+                    <li><span>04</span><div><strong>Histórico e plano</strong><p>As tentativas formam um perfil acumulado. O plano destaca dificuldades comprovadas no histórico.</p></div></li>
+                </ol>
+            </article>
 
-                <p>
-                    O projeto busca utilizar modelos de linguagem para
-                    analisar respostas de estudantes, identificar suas
-                    dificuldades e gerar recomendações personalizadas
-                    de estudo.
-                </p>
+            <div class="about-detail-grid">
+                <article class="dashboard-card about-feature">
+                    <p class="eyebrow">APRENDIZAGEM ADAPTATIVA</p>
+                    <h2>O perfil usa o histórico completo</h2>
+                    <p>O desempenho considera as respostas de todas as avaliações registradas para aquele aluno. Assim, uma dificuldade recorrente não desaparece por causa de uma única prova recente. A tela de Histórico mantém cada tentativa disponível para comparar os resultados.</p>
+                    <p class="about-note">A proposta é acompanhar o conjunto de evidências; a interpretação pedagógica continua dependendo do contexto da turma e do professor.</p>
+                </article>
 
+                <article class="dashboard-card about-feature">
+                    <p class="eyebrow">IA E OCR</p>
+                    <h2>Modelos locais com revisão humana</h2>
+                    <p>O Ollama executa Qwen3 para correção e plano de estudos e Qwen3-VL para ler manuscrito e separar questões. O Tesseract atende ao texto impresso. O estudante pode revisar a transcrição; o professor define o gabarito e os critérios.</p>
+                    <p class="about-note">A leitura e a correção podem falhar. O feedback é apoio ao estudo e não substitui a decisão docente.</p>
+                </article>
 
-                <h2 class="section-title">
-                    Tecnologias
-                </h2>
+                <article class="dashboard-card about-feature">
+                    <p class="eyebrow">ACESSIBILIDADE</p>
+                    <h2>Opções para diferentes formas de uso</h2>
+                    <p>O site inclui tema claro e escuro, contraste reforçado, redução de movimento e controles adaptados a telas menores. O widget oficial VLibras permite solicitar tradução de conteúdo selecionado para Libras.</p>
+                    <a class="about-resource-link" href="https://vlibras.gov.br/app/" target="_blank" rel="noopener noreferrer">Conheça o VLibras <span aria-hidden="true">↗</span></a>
+                </article>
+            </div>
 
-
+            <article class="dashboard-card about-stack-card">
+                <div class="about-section-heading"><div><p class="eyebrow">CONSTRUÇÃO DO PROJETO</p><h2>Tecnologias</h2></div></div>
                 <div class="technology-list">
-
-                    <span>Python</span>
-                    <span>FastAPI</span>
-                    <span>PostgreSQL</span>
-                    <span>SQLAlchemy</span>
-                    <span>Ollama</span>
-                    <span>Qwen3</span>
-                    <span>HTML</span>
-                    <span>CSS</span>
-                    <span>JavaScript</span>
-
+                    <span>Python</span><span>FastAPI</span><span>SQLAlchemy</span><span>PostgreSQL</span>
+                    <span>Ollama</span><span>Qwen3</span><span>Qwen3-VL</span><span>Tesseract OCR</span>
+                    <span>HTML</span><span>CSS</span><span>JavaScript</span><span>VLibras</span>
                 </div>
-
-
-                <p class="project-author">
-
-                    Desenvolvido por
-                    <strong>
-                        Raphaell Nunes e Silva
-                    </strong>
-
-                    <br>
-
-                    Instituto Federal Sul-rio-grandense (IFSul)
-
-                    <br>
-
-                    Campus Bagé
-
-                </p>
-
-            </div>
+                <p class="project-author">Desenvolvido por <strong>Raphaell Nunes e Silva</strong><br>Instituto Federal Sul-rio-grandense (IFSul) · Campus Bagé</p>
+            </article>
 
         </section>
 
@@ -689,6 +766,8 @@
     </main>
 
 
+    <script defer src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/dashboard.js"></script>
 
 </body>

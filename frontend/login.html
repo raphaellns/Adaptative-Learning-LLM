@@ -4,21 +4,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="js/theme-init.js"></script>
 
-    <title>Login | Adaptive Learning</title>
+    <title>Entrar | Adaptive Learning</title>
 
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/product.css">
 </head>
 
 <body>
 
     <main class="auth-container">
 
+        <section class="auth-intro" aria-label="Sobre o Adaptive Learning">
+            <a class="auth-brand" href="login.html"><span class="brand-mark">A</span><span>Adaptive Learning</span></a>
+            <div class="auth-intro-copy">
+                <p class="eyebrow">ESTUDO QUE ACOMPANHA VOCÊ</p>
+                <h2>Transforme cada resposta em um próximo passo.</h2>
+                <p>Analise avaliações, entenda seus pontos de atenção e organize um caminho de estudo feito a partir do seu desempenho.</p>
+                <div class="auth-feature"><span>01</span><div><strong>Envie suas respostas</strong><small>Use texto ou imagem da questão.</small></div></div>
+                <div class="auth-feature"><span>02</span><div><strong>Receba uma análise</strong><small>Veja feedback e recomendações.</small></div></div>
+            </div>
+            <p class="auth-footnote">Projeto acadêmico · IFSul Campus Bagé</p>
+        </section>
+
         <section class="auth-card">
 
-            <h1>Adaptive Learning</h1>
+            <p class="eyebrow auth-form-eyebrow">BEM-VINDO DE VOLTA</p>
+            <h1>Acesse sua conta</h1>
             <p class="auth-subtitle">
-                Entre na sua conta
+                Continue de onde seus estudos precisam.
             </p>
 
             <form id="login-form">
@@ -56,10 +71,14 @@
                 <a href="register.html">Criar conta</a>
             </p>
 
+            <p class="auth-privacy">Seu acesso é protegido e suas preferências ficam neste navegador.</p>
+
         </section>
 
     </main>
 
+    <script defer src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/login.js"></script>
 
 </body>

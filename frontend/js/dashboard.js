@@ -9,6 +9,11 @@ const userName = document.getElementById("user-name");
 const userNameShort = document.getElementById("user-name-short");
 
 const logoutButton = document.getElementById("logout-button");
+const sidebarCloseButton = document.getElementById("sidebar-close");
+const navSearch = document.getElementById("nav-search");
+const sidebarNavSearch = document.getElementById("sidebar-nav-search");
+const userAvatar = document.getElementById("user-avatar");
+const userRoleLabel = document.getElementById("user-role-label");
 
 const adminUsersMenu = document.getElementById("admin-users-menu");
 const adminUsersContainer = document.getElementById("admin-users-container");
@@ -102,6 +107,12 @@ function showSection(sectionName) {
 
     if (selectedMenuItem) {
         selectedMenuItem.classList.add("active");
+    }
+
+    try {
+        sessionStorage.setItem("adaptive-active-section", sectionName);
+    } catch {
+        // Section navigation still works when browser storage is unavailable.
     }
 
 
@@ -545,7 +556,7 @@ async function loadHistory(token) {
                     <strong>Erro</strong>
 
                     <span>
-                        ${data.detail || "Não foi possível carregar o histórico."}
+                        ${escapeHtml(data.detail || "Não foi possível carregar o histórico.")}
                     </span>
                 </div>
             `;
@@ -573,53 +584,42 @@ async function loadHistory(token) {
 
 
         historyContainer.innerHTML = `
-
             <div class="history-list">
-
-                ${data.map(exam => `
-
-                    <div class="history-row">
-
-                        <div class="history-main">
-
-                            <strong>
-                                Avaliação #${exam.exam_id}
-                            </strong>
-
-                            <span>
-                                ${new Date(exam.created_at).toLocaleString("pt-BR")}
-                            </span>
-
-                        </div>
-
-
-                        <div class="history-stats">
-
-                            <span>
-                                ${exam.total_questions} questões
-                            </span>
-
-                            <span class="history-correct">
-                                ${exam.correct_answers} acertos
-                            </span>
-
-                            <span class="history-incorrect">
-                                ${exam.incorrect_answers} erros
-                            </span>
-
-                            <strong>
-                                ${exam.accuracy}%
-                            </strong>
-
-                        </div>
-
-                    </div>
-
-                `).join("")}
-
+                ${data.map(exam => {
+                    const examId = Number(exam.exam_id);
+                    const score = Math.max(0, Math.min(100, Number(exam.accuracy) || 0));
+                    const title = exam.assessment_title || `Avaliação #${examId}`;
+                    const date = new Date(exam.created_at);
+                    const dateLabel = Number.isNaN(date.getTime())
+                        ? "Data indisponível"
+                        : date.toLocaleString("pt-BR");
+                    return `
+                        <article class="history-row" aria-label="${escapeHtml(title)}: ${score.toFixed(1)} por cento de aproveitamento">
+                            <div class="history-main">
+                                <strong>${escapeHtml(title)}</strong>
+                                <span>${escapeHtml(dateLabel)}</span>
+                            </div>
+                            <div class="history-score">
+                                <div class="history-score-label"><span>Aproveitamento</span><strong>${score.toFixed(1)}%</strong></div>
+                                <div class="history-score-track" role="img" aria-label="Aproveitamento de ${score.toFixed(1)} por cento">
+                                    <span style="width: ${score}%"></span>
+                                </div>
+                            </div>
+                            <div class="history-stats">
+                                <span class="history-total"><strong>${Number(exam.total_questions) || 0}</strong> questões</span>
+                                <span class="history-correct"><strong>${Number(exam.correct_answers) || 0}</strong> acertos</span>
+                                <span class="history-incorrect"><strong>${Number(exam.incorrect_answers) || 0}</strong> para revisar</span>
+                            </div>
+                            <button class="history-detail-button" type="button" data-exam-id="${examId}"
+                                aria-expanded="false" aria-controls="history-detail-${examId}">Ver feedback</button>
+                            <div class="history-detail" id="history-detail-${examId}" hidden></div>
+                        </article>
+                    `;
+                }).join("")}
             </div>
-
         `;
+
+        registerHistoryDetailActions(token);
 
     } catch (error) {
 
@@ -639,6 +639,116 @@ async function loadHistory(token) {
 
     }
 
+}
+
+
+function registerHistoryDetailActions(token) {
+    historyContainer.querySelectorAll(".history-detail-button").forEach(button => {
+        button.addEventListener("click", async () => {
+            const examId = button.dataset.examId;
+            const panel = document.getElementById(`history-detail-${examId}`);
+            if (!panel) return;
+
+            const expanded = button.getAttribute("aria-expanded") === "true";
+            if (expanded) {
+                button.setAttribute("aria-expanded", "false");
+                button.textContent = "Ver feedback";
+                panel.hidden = true;
+                return;
+            }
+
+            button.setAttribute("aria-expanded", "true");
+            button.textContent = "Ocultar feedback";
+            panel.hidden = false;
+            if (panel.dataset.loaded === "loaded" || panel.dataset.loaded === "loading") return;
+
+            panel.dataset.loaded = "loading";
+            panel.innerHTML = `
+                <div class="history-detail-loading" role="status">
+                    <span class="loading-spinner" aria-hidden="true"></span>
+                    <span>Carregando o feedback desta tentativa…</span>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`${API_URL}/history/${encodeURIComponent(examId)}`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || "Não foi possível abrir este resultado.");
+                }
+                panel.innerHTML = renderHistoryDetails(data);
+                panel.dataset.loaded = "loaded";
+            } catch (error) {
+                console.error(error);
+                panel.dataset.loaded = "error";
+                panel.innerHTML = `
+                    <div class="history-detail-error" role="alert">
+                        <span>${escapeHtml(error.message || "Não foi possível carregar o feedback.")}</span>
+                        <span>Selecione “Ocultar feedback” e tente novamente.</span>
+                    </div>
+                `;
+            }
+        });
+    });
+}
+
+
+function renderHistoryDetails(data) {
+    if (!Array.isArray(data.questions) || data.questions.length === 0) {
+        return `<div class="history-detail-empty">Esta tentativa ainda não tem questões detalhadas.</div>`;
+    }
+
+    return `
+        <div class="history-detail-list">
+            ${data.questions.map((question, index) => {
+                const resultClass = question.correct === true
+                    ? "is-correct"
+                    : question.correct === false ? "needs-review" : "not-analyzed";
+                const resultLabel = question.correct === true
+                    ? "Correta"
+                    : question.correct === false ? "Precisa revisar" : "Sem análise";
+                const recommendations = Array.isArray(question.recommendations)
+                    ? question.recommendations
+                    : [];
+                return `
+                    <section class="history-question-detail">
+                        <div class="history-question-heading">
+                            <h3>Questão ${index + 1}</h3>
+                            <span class="history-result-badge ${resultClass}">${resultLabel}</span>
+                        </div>
+                        <div class="history-detail-block">
+                            <span>Enunciado</span>
+                            <p>${escapeHtml(question.question || "Enunciado indisponível.")}</p>
+                        </div>
+                        <div class="history-detail-block history-student-answer">
+                            <span>Sua resposta</span>
+                            <p>${escapeHtml(question.student_answer || "Nenhuma resposta registrada.")}</p>
+                        </div>
+                        ${question.topic ? `
+                            <div class="history-detail-topic"><strong>Conteúdo:</strong> ${escapeHtml(question.topic)}</div>
+                        ` : ""}
+                        ${question.main_error ? `
+                            <div class="history-detail-block"><span>Ponto para revisar</span><p>${escapeHtml(question.main_error)}</p></div>
+                        ` : ""}
+                        ${question.explanation ? `
+                            <div class="history-detail-block"><span>Feedback</span><p>${escapeHtml(question.explanation)}</p></div>
+                        ` : ""}
+                        ${recommendations.length ? `
+                            <div class="history-detail-block">
+                                <span>Próximos passos</span>
+                                <ul>${recommendations.map(item => {
+                                    const text = typeof item === "string" ? item : JSON.stringify(item);
+                                    return `<li>${escapeHtml(text)}</li>`;
+                                }).join("")}</ul>
+                            </div>
+                        ` : ""}
+                    </section>
+                `;
+            }).join("")}
+        </div>
+    `;
 }
 
 
@@ -711,6 +821,17 @@ async function loadStudyPlan(token) {
                 </div>
             `;
 
+            return;
+        }
+
+        if (Array.isArray(data.study_plan.plano) && data.study_plan.plano.length === 0) {
+            studyPlanContainer.innerHTML = `
+                <div class="empty-state">
+                    <strong>Sem tópicos prioritários por enquanto</strong>
+                    <span>Seu histórico não mostra erros que peçam um plano de recuperação. Novas respostas atualizam essa análise.</span>
+                </div>
+            `;
+            studyPlanLoaded = true;
             return;
         }
 
@@ -1026,6 +1147,17 @@ async function loadCurrentUser() {
         userNameShort.textContent =
             user.name;
 
+        const roleNames = { STUDENT: "Estudante", TEACHER: "Professor", ADMIN: "Administrador" };
+        const initials = String(user.name || "AL").trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toLocaleUpperCase("pt-BR");
+        if (userAvatar) userAvatar.textContent = initials || "AL";
+        if (userRoleLabel) userRoleLabel.textContent = roleNames[user.role] || "Conta";
+        const settingsName = document.getElementById("settings-account-name");
+        const settingsEmail = document.getElementById("settings-account-email");
+        const settingsRole = document.getElementById("settings-account-role");
+        if (settingsName) settingsName.textContent = user.name || "—";
+        if (settingsEmail) settingsEmail.textContent = user.email || "—";
+        if (settingsRole) settingsRole.textContent = roleNames[user.role] || "Conta";
+
         const examMenuLabel = document.querySelector('.menu-item[data-section="exam"] span:last-child');
         const homeExamTitle = startExamButton?.parentElement?.querySelector("h3");
         const homeExamDescription = startExamButton?.parentElement?.querySelector("p");
@@ -1075,6 +1207,16 @@ async function loadCurrentUser() {
 
         }
 
+        let preferredSection = "home";
+        try {
+            preferredSection = window.location.hash.slice(1) || sessionStorage.getItem("adaptive-active-section") || "home";
+        } catch {
+            preferredSection = window.location.hash.slice(1) || "home";
+        }
+        const preferredMenuItem = [...menuItems].find(item => item.dataset.section === preferredSection);
+        if (!preferredMenuItem || preferredMenuItem.style.display === "none") preferredSection = "home";
+        if (preferredSection !== "exam") showSection(preferredSection);
+
 
     } catch (error) {
 
@@ -1096,6 +1238,8 @@ overlay.addEventListener(
     closeMenu
 );
 
+sidebarCloseButton?.addEventListener("click", closeMenu);
+
 
 menuItems.forEach(item => {
 
@@ -1105,14 +1249,68 @@ menuItems.forEach(item => {
             item.dataset.section;
 
         if (section === "exam") {
+            if (navSearch) navSearch.value = "";
+            if (sidebarNavSearch) sidebarNavSearch.value = "";
+            filterNavigation("");
             window.location.href = "exam.html";
             return;
         }
 
+        if (navSearch) navSearch.value = "";
+        if (sidebarNavSearch) sidebarNavSearch.value = "";
+        filterNavigation("");
         showSection(section);
 
     });
 
+});
+
+function filterNavigation(value) {
+    const query = value.trim().toLocaleLowerCase("pt-BR");
+    menuItems.forEach(item => {
+        const label = item.querySelector("span:last-child")?.textContent?.trim().toLocaleLowerCase("pt-BR") || "";
+        item.hidden = Boolean(query) && !label.includes(query);
+    });
+}
+
+function syncNavigationSearch(source, target) {
+    source?.addEventListener("input", () => {
+        if (target && target.value !== source.value) target.value = source.value;
+        filterNavigation(source.value);
+    });
+    source?.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const firstMatch = [...menuItems].find(item => !item.hidden && item.style.display !== "none");
+            firstMatch?.click();
+            if (firstMatch) {
+                if (navSearch) navSearch.value = "";
+                if (sidebarNavSearch) sidebarNavSearch.value = "";
+                filterNavigation("");
+            }
+        }
+        if (event.key === "Escape") {
+            source.value = "";
+            if (target) target.value = "";
+            filterNavigation("");
+            source.blur();
+            closeMenu();
+        }
+    });
+    source?.addEventListener("focus", () => {
+        if (target && target.value !== source.value) target.value = source.value;
+    });
+}
+
+syncNavigationSearch(navSearch, sidebarNavSearch);
+syncNavigationSearch(sidebarNavSearch, navSearch);
+
+document.addEventListener("keydown", event => {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        openMenu();
+        (window.matchMedia("(max-width: 820px)").matches ? sidebarNavSearch : navSearch)?.focus();
+    }
 });
 
 
