@@ -1,4 +1,6 @@
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth import create_access_token, hash_password, verify_password
@@ -9,13 +11,17 @@ from app.schemas.auth import LoginRequest, RegisterRequest
 def register_user(request: RegisterRequest, db: Session):
 
     user = User(
-        name=request.name,
-        email=request.email,
+        name=request.name.strip(),
+        email=str(request.email).strip().lower(),
         password_hash=hash_password(request.password)
     )
 
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Este e-mail já está cadastrado.") from error
     db.refresh(user)
 
     return {
@@ -28,10 +34,11 @@ def register_user(request: RegisterRequest, db: Session):
     }
 
 def login_user(request: LoginRequest, db: Session):
+    email = str(request.email).strip().lower()
 
     user = (
         db.query(User)
-        .filter(User.email == request.email)
+        .filter(func.lower(User.email) == email)
         .first()
     )
 
@@ -64,5 +71,3 @@ def login_user(request: LoginRequest, db: Session):
         "email": user.email
     }
 }
-
-

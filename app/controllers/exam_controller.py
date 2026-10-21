@@ -110,6 +110,7 @@ def analyze_and_save_exam(
         .filter(
             Exam.user_id == user_id
         )
+        .order_by(Exam.created_at.asc(), Analysis.id.asc())
         .all()
     )
 

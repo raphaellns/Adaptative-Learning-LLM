@@ -1,10 +1,12 @@
 import json
+import hashlib
+import time
 
 from app.study_plan import generate_study_plan
 from app.student_profile import build_student_profile
 from app.study_priority import calculate_study_priorities
 
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials
@@ -21,6 +23,9 @@ router = APIRouter(
     prefix="/profile",
     tags=["Perfil"]
 )
+
+_STUDY_PLAN_CACHE: OrderedDict[tuple[int, str], dict] = OrderedDict()
+_STUDY_PLAN_CACHE_LIMIT = 64
 
 
 @router.get("/performance")
@@ -146,6 +151,7 @@ def get_study_plan(
         .filter(
             Exam.user_id == user_id
         )
+        .order_by(Exam.created_at.asc(), Analysis.id.asc())
         .all()
     )
 
@@ -181,11 +187,39 @@ def get_study_plan(
         profile
     )
 
-    study_plan = generate_study_plan(
-        profile,
-        priorities,
-        historical_results
-    )
+    if not any(not result["correta"] for result in historical_results):
+        # A correct-only history has no evidenced learning gaps to plan for.
+        study_plan = {"plano": []}
+    else:
+        plan_started = time.perf_counter()
+        history_digest = hashlib.sha256(
+            json.dumps(
+                historical_results,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+        cache_key = (user_id, history_digest)
+        study_plan = _STUDY_PLAN_CACHE.get(cache_key)
+        cache_hit = study_plan is not None
+        if study_plan is None:
+            study_plan = generate_study_plan(
+                profile,
+                priorities,
+                historical_results,
+            )
+            _STUDY_PLAN_CACHE[cache_key] = study_plan
+            _STUDY_PLAN_CACHE.move_to_end(cache_key)
+            while len(_STUDY_PLAN_CACHE) > _STUDY_PLAN_CACHE_LIMIT:
+                _STUDY_PLAN_CACHE.popitem(last=False)
+        else:
+            _STUDY_PLAN_CACHE.move_to_end(cache_key)
+        print(
+            f"[LLM] plano user={user_id} cache_hit={cache_hit} "
+            f"total={time.perf_counter() - plan_started:.2f}s",
+            flush=True,
+        )
 
     return {
         "profile": profile,

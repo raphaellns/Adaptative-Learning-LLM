@@ -9,7 +9,11 @@ from app.models.analysis import Analysis
 from app.models.assessment import Assessment, AssessmentQuestion, AssessmentSubmission
 from app.models.exam_question import ExamQuestion
 from app.models.user import User
-from app.schemas.assessment import AssessmentCreateRequest, AssessmentSubmissionRequest
+from app.schemas.assessment import (
+    AssessmentBulkSubmissionRequest,
+    AssessmentCreateRequest,
+    AssessmentSubmissionRequest,
+)
 from app.schemas.exam import ExamRequest, QuestionRequest
 
 
@@ -200,6 +204,85 @@ def submit_question_answer(
     result["assessment"] = {"id": assessment.id, "title": assessment.title}
     result["question_order"] = question.order_index
     result["student_answer"] = student_answer
+    return result
+
+
+@router.post("/{assessment_id}/submit-all")
+def submit_all_question_answers(
+    assessment_id: int,
+    request: AssessmentBulkSubmissionRequest,
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+):
+    """Corrige e salva todas as respostas preenchidas pelo estudante em uma só ação."""
+    user = get_current_user(credentials, db)
+    if user.role != "STUDENT":
+        raise HTTPException(status_code=403, detail="Somente estudantes podem enviar respostas.")
+
+    assessment = get_assessment_or_404(assessment_id, db)
+    if not assessment.is_published:
+        raise HTTPException(status_code=404, detail="Avaliação não encontrada.")
+
+    submitted_ids = [item.question_id for item in request.answers]
+    if len(set(submitted_ids)) != len(submitted_ids):
+        raise HTTPException(status_code=422, detail="Cada questão pode ser enviada somente uma vez por vez.")
+
+    questions = (
+        db.query(AssessmentQuestion)
+        .filter(
+            AssessmentQuestion.assessment_id == assessment.id,
+            AssessmentQuestion.id.in_(submitted_ids),
+        )
+        .all()
+    )
+    questions_by_id = {item.id: item for item in questions}
+    if len(questions_by_id) != len(submitted_ids):
+        raise HTTPException(status_code=404, detail="Uma das questões não pertence a esta avaliação.")
+
+    exam_items = []
+    ordered_questions = []
+    for item in request.answers:
+        answer = item.student_answer.strip()
+        if not answer:
+            raise HTTPException(status_code=422, detail="Revise as respostas antes de enviar.")
+        question = questions_by_id[item.question_id]
+        ordered_questions.append(question)
+        exam_items.append(QuestionRequest(
+            question=question.question,
+            answer_key=question.answer_key,
+            student_answer=answer,
+        ))
+
+    try:
+        result = analyze_and_save_exam(
+            ExamRequest(questions=exam_items),
+            user.id,
+            db,
+            commit=False,
+            generate_plan=False,
+        )
+        for question, exam_question_id in zip(ordered_questions, result["exam_question_ids"]):
+            db.add(AssessmentSubmission(
+                assessment_question_id=question.id,
+                student_id=user.id,
+                exam_question_id=exam_question_id,
+            ))
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    results = result["questions"]
+    result.pop("exam_question_ids", None)
+    result["assessment"] = {"id": assessment.id, "title": assessment.title}
+    result["submissions"] = [
+        {
+            "question_id": question.id,
+            "question_order": question.order_index,
+            "result": analysis,
+        }
+        for question, analysis in zip(ordered_questions, results)
+    ]
     return result
 
 

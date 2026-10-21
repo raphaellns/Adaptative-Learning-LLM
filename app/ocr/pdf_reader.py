@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import fitz
+import pymupdf
 
 
 def pdf_to_images(
@@ -8,7 +8,7 @@ def pdf_to_images(
     output_dir: str,
     dpi: int = 200
 ):
-    pdf = fitz.open(pdf_path)
+    pdf = pymupdf.open(pdf_path)
 
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)

@@ -1,255 +1,215 @@
 # Adaptive Learning LLM
 
-An AI-powered adaptive learning system designed to analyze programming assessments, identify students' learning gaps, and generate personalized study plans based on their performance.
+> Protótipo acadêmico de aprendizagem adaptativa para avaliações de lógica de programação e linguagem C.
 
-The project aims to combine Large Language Models with educational data to provide individualized learning support, helping students understand their mistakes and focus their studies on the topics where they need the most improvement.
+O sistema permite que professores publiquem questões com critérios privados de correção e que estudantes enviem respostas digitadas ou fotografadas. A aplicação usa modelos locais para transcrever manuscritos, analisar respostas, explicar dificuldades e organizar prioridades de estudo a partir do histórico.
 
-## Author
+> **Escopo:** este é um protótipo de TCC. OCR e feedback gerado por IA podem conter erros; o estudante revisa transcrições e o professor continua responsável pela avaliação pedagógica.
 
-**Raphaell Nunes e Silva**
+## O que o sistema faz
 
-Instituto Federal Sul-rio-grandense (IFSul)
-Campus Bagé
+- **Professor:** cria e publica avaliações, importa uma prova completa por PDF/imagem, revisa as questões e os gabaritos extraídos e consulta respostas dos estudantes.
+- **Estudante:** escolhe uma avaliação, envia uma foto por questão ou a prova inteira, revisa as transcrições, envia respostas individualmente ou em lote e recebe feedback.
+- **OCR:** usa Qwen3-VL para manuscrito e análise de documentos; oferece Tesseract para transcrever texto impresso em imagens individuais. O aluno pode recortar uma região antes da leitura.
+- **Correção:** compara a resposta com os critérios cadastrados pelo professor e devolve classificação, tópico, explicação e recomendações.
+- **Histórico e adaptação:** guarda as tentativas, mostra feedback por questão e calcula o perfil usando todas as respostas registradas. O plano foca nos tópicos com erros observados e fica em cache na API enquanto o histórico não muda.
+- **Acessibilidade:** oferece tema claro/escuro, contraste reforçado, redução de movimento, layout adaptável e o widget VLibras.
 
-## Overview
+O gabarito de uma avaliação publicada permanece no servidor: a rota de consulta do estudante devolve o enunciado, mas não os critérios privados.
 
-Traditional assessment systems generally focus on determining whether an answer is correct or incorrect. This project goes further by analyzing the student's response in context and using the results to build an individualized learning profile.
+## Validação e apresentação
 
-The system analyzes programming questions and student answers to identify:
+O repositório contém um conjunto sintético/de referência de 30 respostas para avaliar a classificação e o tópico identificados pelo modelo. As imagens, provas e saídas locais de OCR em `data/ocr/` são arquivos de teste e ficam fora do Git; o conjunto pequeno em `data/questions.py` permanece versionado para permitir reproduzir a avaliação. A avaliação registra também latência e matriz de confusão. Para OCR, há um avaliador de CER/WER e separação de questões que usa transcrições de referência revisadas por uma pessoa.
 
-* Whether the answer is correct
-* The main error made by the student
-* The main topic involved
-* A didactic explanation of the mistake
-* Recommended topics and activities for further study
+O autor já executou 30 chamadas do avaliador de correção e informou 100% de acerto tanto na classificação de corretude quanto na identificação do tópico. Esse resultado exploratório vale para os 30 casos de referência e não comprova generalização para respostas reais em escala; veja as limitações e o protocolo de repetição em [validação](docs/VALIDACAO.md). Métricas de OCR ainda dependem de transcrições de referência revisadas. Consulte também [a arquitetura](docs/ARQUITETURA.md) e [o roteiro da banca](docs/ROTEIRO_BANCA.md).
 
-The collected performance data is used to identify learning priorities and generate personalized study plans.
+Execute o avaliador de correção com python -m app.main; use --limit 2 para uma verificação rápida ou --output /tmp/avaliacao-llm.json para salvar o relatório.
 
-## Objectives
-
-The main objective of the project is to develop an adaptive learning environment capable of using artificial intelligence to personalize the learning process.
-
-The system is designed to:
-
-* Analyze programming assessments automatically
-* Identify conceptual, logical, and technical mistakes
-* Track student performance over time
-* Identify topics with greater learning difficulties
-* Generate personalized study recommendations
-* Adapt future study plans according to the student's history
-* Provide a foundation for integrating educational materials into the analysis process
-
-## How It Works
-
-The general process can be summarized as:
+## Como o fluxo funciona
 
 ```text
-Assessment
-    ↓
-Question and Answer Analysis
-    ↓
-Error and Topic Identification
-    ↓
-Student Performance Profile
-    ↓
-Learning Priorities
-    ↓
-Personalized Study Plan
-    ↓
-Historical Performance
-    ↓
-Adaptive Recommendations
+Professor cria avaliação e critérios
+                  ↓
+Estudante envia foto/PDF e revisa a transcrição
+                  ↓
+API consulta os critérios privados e chama o modelo de correção
+                  ↓
+Feedback e tentativa são salvos no PostgreSQL
+                  ↓
+Perfil acumulado e plano de estudos destacam dificuldades recorrentes
 ```
 
-The system uses a Large Language Model to interpret the student's responses rather than relying exclusively on predefined answer matching.
+O plano usa evidências acumuladas de todas as avaliações, mas envia ao modelo apenas um resumo compacto dos tópicos prioritários e de erros representativos. Isso reduz o tamanho da chamada sem descartar os totais do histórico.
 
-## Artificial Intelligence
+## Tecnologias
 
-The project uses **Qwen3** as the language model, running locally through **Ollama**.
+| Parte | Tecnologias |
+|---|---|
+| API | Python, FastAPI, SQLAlchemy, Pydantic |
+| Banco de dados | PostgreSQL |
+| Modelos locais | Ollama, Qwen3 e Qwen3-VL |
+| OCR impresso | Tesseract com idioma português |
+| Interface | HTML, CSS e JavaScript |
+| Libras | [VLibras Widget](https://vlibras.gov.br/app/), serviço oficial do governo federal |
 
-Local inference allows the system to process student data without depending on external AI APIs and provides greater control over the model used during development and evaluation.
+## Requisitos
 
-The AI component is responsible for understanding the question, comparing the student's response with the expected solution, identifying errors, classifying the main topic, and generating educational feedback.
+- Python 3.10 ou superior
+- PostgreSQL
+- Ollama com os modelos configurados abaixo
+- Tesseract OCR e dados do idioma português (`por`) para o modo de texto impresso
+- Navegador moderno; acesso à internet para carregar o widget VLibras
 
-## Initial Learning Domain
+O VLibras é carregado pelo script oficial do projeto em cada página; a [documentação de integração](https://vlibras.gov.br/doc/widget/installation/webpageintegration.html) informa que o widget é inicializado automaticamente. É uma ferramenta de apoio: a tradução automática não substitui um intérprete humano.
 
-The initial educational domain is **Algorithms I**, with a focus on programming fundamentals using the **C programming language**.
-
-The system is designed so that the same architecture can later be expanded to other subjects and learning domains.
-
-## Technology Stack
-
-### Backend
-
-* Python
-* FastAPI
-* SQLAlchemy
-* PostgreSQL
-* Pydantic
-
-### Artificial Intelligence
-
-* Qwen3
-* Ollama
-
-### Frontend
-
-* HTML
-* CSS
-* JavaScript
-
-## Database
-
-PostgreSQL is used as the persistence layer for the application.
-
-The database stores information required for user management, assessments, question analyses, and student performance history.
-
-This persistent data allows the system to build a long-term learning profile instead of treating each assessment as an isolated event.
-
-## Adaptive Learning
-
-The central concept of the project is the use of historical performance to personalize future recommendations.
-
-For example, repeated difficulties in a specific topic can increase its priority in the student's study plan, while topics with consistently strong performance can receive less emphasis.
-
-This creates a continuous cycle:
+Modelos padrão usados pelo projeto:
 
 ```text
-Study
-  ↓
-Assessment
-  ↓
-Analysis
-  ↓
-Feedback
-  ↓
-Personalized Study Plan
-  ↓
-Study
+ANALYSIS_MODEL=qwen3:4b
+STUDY_PLAN_MODEL=qwen3:4b
+OCR_VISION_MODEL=qwen3-vl:4b-instruct
 ```
 
-## Validation
+Os nomes podem ser alterados por variáveis de ambiente. Os modelos precisam estar disponíveis no Ollama do computador que executa a API. A primeira inferência após descarregar um modelo pode levar mais tempo; o desempenho também depende de RAM/VRAM e da resolução da imagem.
 
-The language model is evaluated using manually labeled programming questions.
+## Instalação local
 
-The evaluation considers different aspects of the analysis, including:
-
-* Correct/incorrect answer classification
-* Topic classification
-* Identification of the student's main error
-* Consistency of the generated explanation
-
-The validation process is intended to measure how reliably the model can support the educational objectives of the system.
-
-## Future Expansion
-
-The architecture is designed to support additional capabilities such as:
-
-* OCR-based exam input
-* Historical performance analysis
-* Retrieval-Augmented Generation (RAG)
-* Integration with course and educational materials
-* More advanced adaptive learning strategies
-* Web and mobile interfaces
-* Additional programming languages and academic subjects
-
-## Running the Project
-
-### Clone the repository
+Clone o repositório e entre na pasta:
 
 ```bash
 git clone https://github.com/raphaellns/Adaptative-Learning-LLM.git
 cd Adaptative-Learning-LLM
 ```
 
-### Create a virtual environment
+Crie o ambiente e instale as dependências da API:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-```
-
-### Install dependencies
-
-```bash
 python -m pip install -r requirements.txt
 ```
 
-### Configure the environment
-
-Create a `.env` file and configure the required environment variables.
-
-Example:
-
-```env
-DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/adaptive_learning
-```
-
-### Start the API
+Instale/configure PostgreSQL, Tesseract com o pacote `por` e Ollama conforme o sistema operacional. No Ollama, disponibilize os modelos usados pela aplicação:
 
 ```bash
+ollama pull qwen3:4b
+ollama pull qwen3-vl:4b-instruct
+```
+
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+DATABASE_URL=postgresql://USUARIO:SENHA@localhost:5432/adaptive_learning
+JWT_SECRET_KEY=COLE_AQUI_A_CHAVE_ALEATORIA_GERADA
+CORS_ALLOWED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
+ANALYSIS_MODEL=qwen3:4b
+STUDY_PLAN_MODEL=qwen3:4b
+OCR_VISION_MODEL=qwen3-vl:4b-instruct
+```
+
+Gere a chave antes de preencher o `.env` com `python -c 'import secrets; print(secrets.token_hex(32))'`. O backend rejeita chaves JWT com menos de 32 bytes e os tokens expiram após uma hora. Nunca envie o `.env` ao Git ou compartilhe o seu conteúdo. Para publicar a API, use HTTPS, senha forte para o usuário do PostgreSQL e configure `CORS_ALLOWED_ORIGINS` com as origens exatas do frontend. Este protótipo ainda não tem limitação de tentativas no login nem controle distribuído de chamadas caras de OCR/LLM; não o exponha diretamente à internet antes de adicionar esses controles e migrar os tokens do `localStorage` para uma sessão protegida com proteção CSRF.
+
+Para uma base nova, crie o banco e execute `database/schema.sql` com uma conta que possa criar as tabelas. Para uma base existente que já contém usuários, provas e análises, execute `database/migrations/001_assessment_workflow.sql` como proprietária do schema `public`, informando o nome da conta de execução da API:
+
+```bash
+psql "$DATABASE_OWNER_URL" \
+  -v app_role='USUARIO_DA_API' \
+  -f database/migrations/001_assessment_workflow.sql
+```
+
+`DATABASE_OWNER_URL` é uma variável de exemplo para a conexão administrativa; não use a senha da conta de execução da API como proprietária do banco. O valor de `app_role` deve corresponder ao usuário presente em `DATABASE_URL`.
+
+Inicie a API:
+
+```bash
+source .venv/bin/activate
 uvicorn app.api:app --reload
 ```
 
-The API documentation will be available at:
+A documentação interativa fica em <http://127.0.0.1:8000/docs>.
 
-```text
-http://127.0.0.1:8000/docs
-```
-
-### Start the frontend
+Em outro terminal, sirva os arquivos estáticos do front-end:
 
 ```bash
 cd frontend
 python3 -m http.server 5500
 ```
 
-The frontend will be available at:
+Abra <http://127.0.0.1:5500>. A API já permite essa origem local para desenvolvimento.
 
-```text
-http://127.0.0.1:5500
-```
+## Primeiro acesso e papéis
 
-## Fluxo funcional de uma questão
+1. Cadastre uma conta pela tela de registro. Contas novas começam como `STUDENT`.
+2. A conta administradora deve ser provisionada no banco conforme o procedimento do projeto, se ainda não existir.
+3. Entre como administrador, abra **Usuários** e altere a conta desejada para `TEACHER`.
+4. O professor cadastra e publica a avaliação. O aluno entra com a própria conta para responder.
 
-O protótipo agora separa quem publica a questão de quem responde:
+O professor não precisa cadastrar a resposta do aluno. Ele informa a solução esperada ou critérios de correção; o estudante envia a própria resposta.
 
-1. Uma conta com papel **Professor** cadastra uma avaliação, o enunciado e o gabarito oficial.
-2. A conta de **Estudante** vê apenas as avaliações publicadas e o enunciado. O gabarito permanece no servidor.
-3. O estudante envia uma foto da resposta, escolhe Qwen-VL para manuscrito/código ou Tesseract para texto impresso e pode recortar a imagem.
-4. A transcrição aparece em um campo editável. O estudante revisa o texto e envia para correção.
-5. A API busca o gabarito salvo, chama o analisador, grava a resposta e a análise no histórico do estudante e devolve o feedback.
+## Rotas principais
 
-O envio de uma resposta usa `POST /assessments/{assessment_id}/questions/{question_id}/submit`. A rota de estudante não aceita gabarito no corpo. A rota manual antiga `POST /exam/analyze` fica restrita a professores e administradores.
+| Método e rota | Uso |
+|---|---|
+| `POST /auth/register`, `POST /auth/login` | Criar conta e iniciar sessão |
+| `POST /assessments` | Professor cria uma avaliação e suas questões |
+| `GET /assessments` | Lista avaliações disponíveis conforme o papel |
+| `GET /assessments/{id}/questions` | Busca enunciados; o gabarito só é devolvido a quem pode gerenciar a avaliação |
+| `POST /ocr/transcribe-assessment` | Professor importa prova completa para revisar questões e critérios |
+| `POST /ocr/transcribe-student-assessment` | Relaciona respostas manuscritas de uma prova aos campos da avaliação |
+| `POST /ocr/transcribe` | Transcreve uma imagem individual com Qwen3-VL ou Tesseract |
+| `POST /assessments/{id}/questions/{question_id}/submit` | Corrige e salva uma resposta individual |
+| `POST /assessments/{id}/submit-all` | Corrige e salva respostas preenchidas em lote |
+| `GET /assessments/{id}/submissions` | Professor consulta respostas e correções recebidas |
+| `GET /history/` e `GET /history/{exam_id}` | Aluno consulta tentativas próprias e feedback por questão |
+| `GET /profile/performance` | Calcula desempenho acumulado e aproveitamento por tópico |
+| `GET /profile/study-plan` | Gera ou reutiliza o plano para o histórico atual |
 
-As tabelas `assessments`, `assessment_questions` e `assessment_submissions` são uma migração explícita: a API não tenta criar tabelas durante a inicialização, pois a conta de execução não precisa ter permissão de DDL. O arquivo `database/schema.sql` inclui essas tabelas para instalações novas. Para uma base existente, a pessoa responsável pelo banco deve executar `database/migrations/001_assessment_workflow.sql` como proprietária do schema. A migração concede à conta indicada acesso às tabelas novas. A conexão da API continua configurada em `DATABASE_URL`.
+As rotas protegidas exigem o token recebido no login. A API não aceita o gabarito enviado pelo aluno no corpo da submissão.
 
-## Testar no navegador
+## OCR e limites de envio
 
-1. Em uma sessão SQL com permissão de criação no schema `public`, execute a migração. Se usar `psql`, informe `app_role` com o nome de usuário que aparece na URL `DATABASE_URL` da API:
+- Imagens individuais: PNG, JPEG ou WebP, até 10 MB.
+- Prova completa: PDF, PNG, JPEG ou WebP, até 25 MB e 8 páginas por envio.
+- PDFs são convertidos em imagens e processados página por página para manter a entrada visual dentro do contexto do modelo.
+- A transcrição volta para campos editáveis. Confira especialmente manuscrito, código, símbolos e separação de questões antes de publicar ou pedir a correção.
+- A chamada de OCR de documento usa Qwen3-VL. O Tesseract é opção para texto impresso em transcrições individuais; ele não separa automaticamente manuscrito e enunciado.
 
-   ```bash
-   psql "$DATABASE_OWNER_URL" -v app_role='USUARIO_DA_API' -f database/migrations/001_assessment_workflow.sql
-   ```
+## Configurações opcionais
 
-   `DATABASE_OWNER_URL` precisa apontar para a mesma base, usando a conta proprietária do schema. A API não precisa usar essa conta.
-2. Inicie PostgreSQL, a API e o servidor do diretório `frontend`, como descrito acima.
-3. Entre com a conta que já possui papel `ADMIN`. Em **Usuários**, altere uma conta de estudante para **Professor** e salve.
-4. Saia, entre com essa conta de professor e abra **Gerenciar avaliações**. Cadastre um título, um enunciado e o gabarito oficial e publique.
-5. Saia e entre com uma conta de estudante. Abra **Responder avaliação**, selecione a avaliação, carregue uma foto da resposta e recorte a área relevante.
-6. Transcreva, revise/edite o texto e envie para correção. Confira o feedback na tela e depois abra **Histórico**.
-7. Entre novamente como professor e use **Ver respostas** na avaliação para consultar o envio e a correção.
+Além de `DATABASE_URL` e dos modelos, é possível ajustar o OCR por ambiente:
 
-Contas novas sempre começam como `STUDENT`; não é possível escolher `TEACHER` ou `ADMIN` durante o cadastro. Se ainda não existir uma conta administradora na base, a primeira conta `ADMIN` precisa ser provisionada diretamente no banco conforme o procedimento de desenvolvimento do projeto.
+| Variável | Padrão | Efeito |
+|---|---:|---|
+| `OCR_MAX_IMAGE_SIDE` | `1600` | Reduz fotos maiores antes de enviá-las ao modelo visual |
+| `OCR_VISION_TIMEOUT` | `120` | Prazo máximo de uma chamada visual, em segundos |
+| `OCR_NUM_CTX` | `8192` | Contexto usado no Ollama visual |
+| `OCR_TESSERACT_TIMEOUT` | `25` | Prazo de leitura do Tesseract, em segundos |
+| `OCR_DOCUMENT_NUM_PREDICT` | `2400` | Limite de tokens gerados por página de documento |
 
-O OCR aceita PNG, JPEG e WebP de até 10 MB. A rota `POST /ocr/transcribe` exige autenticação e recebe os campos multipart `file` e `engine` (`vision` ou `tesseract`). A correção de cada resposta usa o modelo de análise já configurado no backend. O plano de estudos não é recalculado a cada envio, para evitar uma chamada extra de LLM no fluxo de correção.
+Não reduza resolução, contexto ou tokens sem comparar transcrições e tempos em imagens representativas do seu conjunto de provas.
 
-Nesta etapa, o professor cadastra o enunciado e o gabarito manualmente e o estudante responde uma questão por vez. Importar uma prova inteira e extrair enunciado/gabarito automaticamente ficam para uma etapa posterior.
+## Estrutura do código
 
-Qwen-VL processing reports the total request time, model load time, image/prompt processing time, and text generation time separately. The first request after a model unload includes the load; the model is kept warm for 15 minutes after an OCR request. Compare a cold request with a second request using a similarly sized crop to measure warm performance.
+~~~text
+app/
+  controllers/   persistência e coordenação da análise
+  models/        entidades SQLAlchemy
+  ocr/           leitura de imagens, PDFs e transcrição
+  routes/        autenticação, avaliações, OCR, histórico e perfil
+  llm_analyzer.py
+  study_plan.py
+frontend/
+  dashboard.html, exam.html, result.html, login.html, register.html
+  css/           estilos, temas e layouts responsivos
+  js/            interações, fluxo de avaliações e preferências
+database/
+  schema.sql
+  migrations/    migrações explícitas para bases existentes
+docs/            arquitetura, protocolo de validação e roteiro da demonstração
+scripts/         avaliação offline de transcrições OCR anotadas
+~~~
 
-Tesseract also requires the system executable and Portuguese language data. On Debian or Ubuntu, install `tesseract-ocr` and `tesseract-ocr-por` if they are not already present.
+## Autoria
 
-## Academic Context
-
-This project is being developed as an academic project at the **Instituto Federal Sul-rio-grandense (IFSul), Campus Bagé**, with the objective of exploring the application of Large Language Models and adaptive learning techniques in programming education.
+**Raphaell Nunes e Silva**<br>
+Instituto Federal Sul-rio-grandense (IFSul) · Campus Bagé

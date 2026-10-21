@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field
 
 
 class AssessmentQuestionInput(BaseModel):
-    question: str = Field(min_length=1)
-    answer_key: str = Field(min_length=1)
+    question: str = Field(min_length=1, max_length=12000)
+    answer_key: str = Field(min_length=1, max_length=20000)
 
 
 class AssessmentCreateRequest(BaseModel):
@@ -12,4 +12,13 @@ class AssessmentCreateRequest(BaseModel):
 
 
 class AssessmentSubmissionRequest(BaseModel):
-    student_answer: str = Field(min_length=1)
+    student_answer: str = Field(min_length=1, max_length=30000)
+
+
+class AssessmentBulkSubmissionItem(BaseModel):
+    question_id: int = Field(gt=0)
+    student_answer: str = Field(min_length=1, max_length=30000)
+
+
+class AssessmentBulkSubmissionRequest(BaseModel):
+    answers: list[AssessmentBulkSubmissionItem] = Field(min_length=1, max_length=30)
