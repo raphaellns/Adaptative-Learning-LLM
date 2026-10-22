@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.auth import bearer_scheme, get_user_id_from_token
 from app.database import get_db
 from app.models.user import User
+from app.models.assessment import Assessment, AssessmentSubmission
 
 
 router = APIRouter(
@@ -47,6 +49,26 @@ def get_admin_user(
     return admin
 
 
+@router.get("/overview")
+def get_admin_overview(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+):
+    get_admin_user(credentials, db)
+    role_counts = dict(
+        db.query(User.role, func.count(User.id)).group_by(User.role).all()
+    )
+    return {
+        "users": sum(role_counts.values()),
+        "students": role_counts.get("STUDENT", 0),
+        "teachers": role_counts.get("TEACHER", 0),
+        "administrators": role_counts.get("ADMIN", 0),
+        "published_assessments": db.query(Assessment)
+            .filter(Assessment.is_published.is_(True)).count(),
+        "submissions": db.query(AssessmentSubmission).count(),
+    }
+
+
 @router.get("/users")
 def list_users(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -55,16 +77,16 @@ def list_users(
 
     get_admin_user(credentials, db)
 
-    users = db.query(User).all()
+    users = db.query(User.id, User.name, User.email, User.role).all()
 
     return [
         {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "role": user.role
+            "id": user_id,
+            "name": name,
+            "email": email,
+            "role": role
         }
-        for user in users
+        for user_id, name, email, role in users
     ]
 
 

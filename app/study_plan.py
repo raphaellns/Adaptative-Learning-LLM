@@ -5,13 +5,15 @@ import time
 from collections import defaultdict
 
 from dotenv import load_dotenv
-from ollama import chat
+from ollama import Client
 
+from app.ollama_runtime import LLM_TIMEOUT_SECONDS, ollama_slot
 from app.topics import ALGORITHM_TOPICS
 
 
 load_dotenv()
 STUDY_PLAN_MODEL = os.getenv("STUDY_PLAN_MODEL", "qwen3:4b")
+_ollama_client = Client(timeout=LLM_TIMEOUT_SECONDS)
 MAX_PLAN_TOPICS = 5
 MAX_ERROR_EXAMPLES_PER_TOPIC = 2
 
@@ -116,17 +118,18 @@ Copie prioridade_percentual para o campo prioridade. Ordene pela prioridade e pe
     }
 
     def run_chat(max_tokens: int):
-        return chat(
-            model=STUDY_PLAN_MODEL,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_message},
-            ],
-            format=response_schema,
-            think=False,
-            keep_alive=-1,
-            options={"temperature": 0.1, "num_predict": max_tokens},
-        )
+        with ollama_slot(LLM_TIMEOUT_SECONDS):
+            return _ollama_client.chat(
+                model=STUDY_PLAN_MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message},
+                ],
+                format=response_schema,
+                think=False,
+                keep_alive=-1,
+                options={"temperature": 0.1, "num_predict": max_tokens},
+            )
 
     started = time.perf_counter()
     response = run_chat(900)

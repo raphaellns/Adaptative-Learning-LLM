@@ -8,6 +8,7 @@ from app.auth import bearer_scheme, get_user_id_from_token
 from app.database import get_db
 from app.models.assessment import Assessment, AssessmentQuestion, AssessmentSubmission
 from app.models.exam import Exam
+from app.models.user import User
 
 
 router = APIRouter(
@@ -58,12 +59,22 @@ def parse_recommendations(value: str | None) -> list:
     return parsed if isinstance(parsed, list) else [parsed]
 
 
+def get_student_id(credentials: HTTPAuthorizationCredentials, db: Session) -> int:
+    user_id = get_user_id_from_token(credentials.credentials)
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    if user.role != "STUDENT":
+        raise HTTPException(status_code=403, detail="O histórico de respostas é exclusivo do estudante.")
+    return user.id
+
+
 @router.get("/")
 def get_history(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: Session = Depends(get_db)
 ):
-    user_id = get_user_id_from_token(credentials.credentials)
+    user_id = get_student_id(credentials, db)
     exams = (
         db.query(Exam)
         .filter(Exam.user_id == user_id)
@@ -105,7 +116,7 @@ def get_history_details(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ):
-    user_id = get_user_id_from_token(credentials.credentials)
+    user_id = get_student_id(credentials, db)
     exam = (
         db.query(Exam)
         .filter(Exam.id == exam_id, Exam.user_id == user_id)

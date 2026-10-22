@@ -4,8 +4,10 @@
         contrast: "adaptive-ui-contrast",
         scale: "adaptive-ui-scale",
         motion: "adaptive-ui-reduced-motion",
+        reading: "adaptive-ui-reading-mode",
+        links: "adaptive-ui-link-highlight",
     };
-    const defaults = { theme: "system", contrast: "normal", scale: "normal", motion: "normal" };
+    const defaults = { theme: "system", contrast: "normal", scale: "normal", motion: "normal", reading: "off", links: "normal" };
     const root = document.documentElement;
     const scaleValues = { normal: "1", large: "1.08", larger: "1.16" };
 
@@ -20,6 +22,8 @@
         contrast: read(keys.contrast, defaults.contrast) === "high" ? "high" : "normal",
         scale: Object.hasOwn(scaleValues, read(keys.scale, defaults.scale)) ? read(keys.scale, defaults.scale) : defaults.scale,
         motion: read(keys.motion, defaults.motion) === "reduced" ? "reduced" : "normal",
+        reading: read(keys.reading, defaults.reading) === "on" ? "on" : "off",
+        links: read(keys.links, defaults.links) === "highlight" ? "highlight" : "normal",
     });
     let preferences = readPreferences();
 
@@ -33,6 +37,8 @@
         root.dataset.contrast = preferences.contrast;
         root.dataset.textScale = preferences.scale;
         root.dataset.motion = preferences.motion;
+        root.dataset.readingMode = preferences.reading;
+        root.dataset.linkHighlight = preferences.links;
         root.style.zoom = scaleValues[preferences.scale];
         syncControls();
     };
@@ -60,6 +66,14 @@
         if (quickMotion) quickMotion.checked = preferences.motion === "reduced";
         const quickScale = document.getElementById("quick-scale-setting");
         if (quickScale) quickScale.value = preferences.scale;
+        const reading = document.getElementById("reading-mode-setting");
+        if (reading) reading.checked = preferences.reading === "on";
+        const linkHighlight = document.getElementById("link-highlight-setting");
+        if (linkHighlight) linkHighlight.checked = preferences.links === "highlight";
+        const quickReading = document.getElementById("quick-reading-setting");
+        if (quickReading) quickReading.checked = preferences.reading === "on";
+        const quickLinks = document.getElementById("quick-links-setting");
+        if (quickLinks) quickLinks.checked = preferences.links === "highlight";
     }
 
     apply();
@@ -95,6 +109,9 @@
                 <label class="quick-setting-row" for="quick-scale-setting"><span>Tamanho</span><select id="quick-scale-setting"><option value="normal">Padrão</option><option value="large">Grande</option><option value="larger">Muito grande</option></select></label>
                 <label class="quick-check-row" for="quick-contrast-setting"><span>Alto contraste</span><input id="quick-contrast-setting" type="checkbox"></label>
                 <label class="quick-check-row" for="quick-motion-setting"><span>Reduzir animações</span><input id="quick-motion-setting" type="checkbox"></label>
+                <label class="quick-check-row" for="quick-reading-setting"><span>Modo de leitura</span><input id="quick-reading-setting" type="checkbox"></label>
+                <label class="quick-check-row" for="quick-links-setting"><span>Destacar links</span><input id="quick-links-setting" type="checkbox"></label>
+                <label class="quick-setting-row" for="quick-language-setting"><span>Idioma</span><select id="quick-language-setting"><option value="pt-BR">Português</option><option value="en">English</option></select></label>
                 <a class="quick-settings-link" href="dashboard.html#settings">Abrir todas as configurações <span aria-hidden="true">→</span></a>
                 <p class="accessibility-note" role="status">Salvo neste navegador.</p>
             </section>`;
@@ -123,6 +140,8 @@
         tools.querySelector("#quick-scale-setting").addEventListener("change", event => update("scale", event.target.value));
         tools.querySelector("#quick-contrast-setting").addEventListener("change", event => update("contrast", event.target.checked ? "high" : "normal"));
         tools.querySelector("#quick-motion-setting").addEventListener("change", event => update("motion", event.target.checked ? "reduced" : "normal"));
+        tools.querySelector("#quick-reading-setting").addEventListener("change", event => update("reading", event.target.checked ? "on" : "off"));
+        tools.querySelector("#quick-links-setting").addEventListener("change", event => update("links", event.target.checked ? "highlight" : "normal"));
     }
 
     mountSettingsPanel();
@@ -130,12 +149,15 @@
     document.getElementById("text-scale-setting")?.addEventListener("change", event => update("scale", event.target.value));
     document.getElementById("contrast-setting")?.addEventListener("change", event => update("contrast", event.target.checked ? "high" : "normal"));
     document.getElementById("motion-setting")?.addEventListener("change", event => update("motion", event.target.checked ? "reduced" : "normal"));
+    document.getElementById("reading-mode-setting")?.addEventListener("change", event => update("reading", event.target.checked ? "on" : "off"));
+    document.getElementById("link-highlight-setting")?.addEventListener("change", event => update("links", event.target.checked ? "highlight" : "normal"));
 
     const resetButton = document.getElementById("reset-settings-button");
     resetButton?.addEventListener("click", () => {
         preferences = { ...defaults };
         Object.entries(keys).forEach(([name, key]) => save(key, defaults[name]));
         apply();
+        window.AdaptiveI18n?.setLanguage("pt-BR");
         window.dispatchEvent(new CustomEvent("adaptive:preferences-change", { detail: { ...preferences } }));
         const status = document.getElementById("settings-status");
         if (status) status.textContent = "Preferências restauradas.";

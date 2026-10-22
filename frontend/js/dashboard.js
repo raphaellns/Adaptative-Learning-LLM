@@ -14,6 +14,8 @@ const navSearch = document.getElementById("nav-search");
 const sidebarNavSearch = document.getElementById("sidebar-nav-search");
 const userAvatar = document.getElementById("user-avatar");
 const userRoleLabel = document.getElementById("user-role-label");
+const openAccountButton = document.getElementById("open-account-button");
+const accountDialog = document.getElementById("account-dialog");
 
 const adminUsersMenu = document.getElementById("admin-users-menu");
 const adminUsersContainer = document.getElementById("admin-users-container");
@@ -59,7 +61,65 @@ const API_URL = "http://127.0.0.1:8000";
 
 let currentUserId = null;
 let currentToken = null;
+let currentUser = null;
 let studyPlanLoaded = false;
+
+
+function userInitials(name) {
+    return String(name || "AL").trim().split(/\s+/).slice(0, 2)
+        .map(part => part[0]).join("").toLocaleUpperCase("pt-BR") || "AL";
+}
+
+
+function renderUserInitials(element, user) {
+    if (!element) return;
+    element.textContent = userInitials(user?.name);
+}
+
+
+function syncAccountUI(user) {
+    currentUser = user;
+    currentUserId = user.id;
+    const roleNames = { STUDENT: "Estudante", TEACHER: "Professor", ADMIN: "Administrador" };
+    if (userName) userName.textContent = user.name || "";
+    if (userNameShort) userNameShort.textContent = user.name || "";
+    if (userRoleLabel) userRoleLabel.textContent = roleNames[user.role] || "Conta";
+    renderUserInitials(userAvatar, user);
+    const values = {
+        "settings-account-name": user.name || "—",
+        "settings-account-email": user.email || "—",
+        "settings-account-role": roleNames[user.role] || "Conta",
+    };
+    Object.entries(values).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    });
+    const nameInput = document.getElementById("account-name-input");
+    const emailInput = document.getElementById("account-email-input");
+    if (nameInput) nameInput.value = user.name || "";
+    if (emailInput) emailInput.value = user.email || "";
+}
+
+
+function openAccount() {
+    if (accountDialog && !accountDialog.open) accountDialog.showModal();
+}
+
+
+async function apiRequest(path, options = {}) {
+    const headers = new Headers(options.headers || {});
+    headers.set("Authorization", `Bearer ${currentToken}`);
+    if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
+    const response = await fetch(`${API_URL}${path}`, { ...options, headers });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        const detail = Array.isArray(data.detail)
+            ? data.detail.map(item => item.msg || JSON.stringify(item)).join("; ")
+            : data.detail;
+        throw new Error(detail || "Não foi possível concluir a operação.");
+    }
+    return data;
+}
 
 
 function openMenu() {
@@ -152,7 +212,7 @@ async function loadAdminUsers(token) {
                 <div class="empty-state">
                     <strong>Erro</strong>
                     <span>
-                        ${data.detail || "Não foi possível carregar os usuários."}
+                        ${escapeHtml(data.detail || "Não foi possível carregar os usuários.")}
                     </span>
                 </div>
             `;
@@ -179,92 +239,92 @@ async function loadAdminUsers(token) {
         }
 
 
+        const userNamesById = new Map(
+            data.map(user => [String(user.id), String(user.name || "")])
+        );
+
         adminUsersContainer.innerHTML = `
+            <div class="admin-users-toolbar">
+                <div><strong><span class="admin-users-visible-count">${data.length}</span> <span>contas</span></strong><small>Busque por nome ou e-mail e filtre por perfil.</small></div>
+                <input id="admin-users-search" type="search" placeholder="Buscar nome ou e-mail" aria-label="Buscar usuários">
+                <select id="admin-users-role-filter" aria-label="Filtrar por perfil">
+                    <option value="all">Todos os perfis</option><option value="STUDENT">Estudantes</option><option value="TEACHER">Professores</option><option value="ADMIN">Administradores</option>
+                </select>
+                <button id="refresh-admin-users" type="button" class="secondary-button">Atualizar</button>
+            </div>
+            <div class="users-list" id="admin-users-list">
+                ${data.map(user => {
+                    const userId = String(user.id);
+                    const userName = String(user.name || "");
+                    const userEmail = String(user.email || "");
+                    const roleClass = ["ADMIN", "TEACHER", "STUDENT"].includes(user.role)
+                        ? user.role.toLowerCase()
+                        : "student";
+                    const initial = userName.charAt(0).toUpperCase() || "?";
 
-            <div class="users-list">
-
-                ${data.map(user => `
-
-                    <div class="user-row">
-
+                    return `
+                    <div class="user-row" data-user-role="${escapeHtml(user.role)}" data-user-search="${escapeHtml(`${userName} ${userEmail}`.toLocaleLowerCase("pt-BR"))}">
                         <div class="user-main">
-
-                            <div class="user-avatar ${user.role.toLowerCase()}">
-                                ${user.name.charAt(0).toUpperCase()}
+                            <div class="user-avatar ${roleClass}">
+                                ${escapeHtml(initial)}
                             </div>
-
-
                             <div class="user-info">
-
-                                <strong>
-                                    ${user.name}
-                                </strong>
-
-                                <span>
-                                    ${user.email}
-                                </span>
-
+                                <strong data-no-translate>${escapeHtml(userName)}</strong>
+                                <span data-no-translate>${escapeHtml(userEmail)}</span>
                             </div>
-
                         </div>
-
-
                         <div class="user-details">
-
-                            <span class="role-badge ${user.role.toLowerCase()}">
-                                ${user.role}
+                            <span class="role-badge ${roleClass}">
+                                ${escapeHtml(user.role)}
                             </span>
-
-                            <span class="user-id">
-                                ID ${user.id}
-                            </span>
-
+                            <span class="user-id">ID ${escapeHtml(userId)}</span>
                         </div>
-
-
                         <div class="user-actions">
-
                             ${user.role !== "ADMIN"
-                ? `
-                                    <select class="role-select" data-user-id="${user.id}" aria-label="Função de ${escapeHtml(user.name)}">
+                                ? `
+                                    <select class="role-select" data-user-id="${escapeHtml(userId)}" aria-label="Função de ${escapeHtml(userName)}">
                                         <option value="STUDENT" ${user.role === "STUDENT" ? "selected" : ""}>Estudante</option>
                                         <option value="TEACHER" ${user.role === "TEACHER" ? "selected" : ""}>Professor</option>
                                     </select>
-                                    <button type="button" class="user-action-button role-button" data-user-id="${user.id}">Salvar função</button>
+                                    <button type="button" class="user-action-button role-button" data-user-id="${escapeHtml(userId)}">Salvar função</button>
                                   `
-                : ""
-            }
-
-                            ${user.id === currentUserId
-                ? `
-                                    <span class="current-user-label">
-                                        Você
-                                    </span>
+                                : ""
+                            }
+                            ${Number(user.id) === currentUserId
+                                ? `
+                                    <span class="current-user-label">Você</span>
                                   `
-                : `
-                                    <button
-                                        type="button"
-                                        class="user-action-button delete-button"
-                                        data-user-id="${user.id}"
-                                        data-user-name="${user.name}"
-                                    >
+                                : `
+                                    <button type="button" class="user-action-button delete-button" data-user-id="${escapeHtml(userId)}">
                                         Excluir
                                     </button>
                                   `
-            }
-
+                            }
                         </div>
-
                     </div>
-
-                `).join("")}
-
+                    `;
+                }).join("")}
             </div>
-
         `;
 
+        const applyAdminUserFilters = () => {
+            const query = document.getElementById("admin-users-search")?.value.trim().toLocaleLowerCase("pt-BR") || "";
+            const role = document.getElementById("admin-users-role-filter")?.value || "all";
+            let visible = 0;
+            adminUsersContainer.querySelectorAll(".user-row").forEach(row => {
+                const matches = (!query || row.dataset.userSearch.includes(query))
+                    && (role === "all" || row.dataset.userRole === role);
+                row.hidden = !matches;
+                visible += matches ? 1 : 0;
+            });
+            const count = adminUsersContainer.querySelector(".admin-users-visible-count");
+            if (count) count.textContent = `${visible} / ${data.length}`;
+        };
+        document.getElementById("admin-users-search").addEventListener("input", applyAdminUserFilters);
+        document.getElementById("admin-users-role-filter").addEventListener("change", applyAdminUserFilters);
+        document.getElementById("refresh-admin-users").addEventListener("click", () => loadAdminUsers(token));
 
-        registerDeleteActions();
+        registerDeleteActions(userNamesById);
         registerRoleActions();
 
 
@@ -286,6 +346,33 @@ async function loadAdminUsers(token) {
 
     }
 
+}
+
+
+async function loadAdminOverview(token) {
+    const note = document.getElementById("admin-overview-note");
+    try {
+        const response = await fetch(`${API_URL}/admin/overview`, {
+            headers: { "Authorization": `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Não foi possível carregar os indicadores.");
+        const values = {
+            "admin-metric-users": data.users,
+            "admin-metric-students": data.students,
+            "admin-metric-teachers": data.teachers,
+            "admin-metric-assessments": data.published_assessments,
+        };
+        Object.entries(values).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = Number(value).toLocaleString();
+        });
+        if (note) note.textContent = window.AdaptiveI18n?.getLanguage() === "en"
+            ? `${Number(data.submissions).toLocaleString()} student responses submitted.`
+            : `${Number(data.submissions).toLocaleString()} respostas recebidas nas avaliações.`;
+    } catch (error) {
+        if (note) note.textContent = error.message || "Não foi possível carregar os indicadores.";
+    }
 }
 
 
@@ -320,7 +407,7 @@ async function loadPerformance(token) {
                     </strong>
 
                     <span>
-                        ${errorMessage}
+                        ${escapeHtml(errorMessage)}
                     </span>
 
                 </div>
@@ -396,31 +483,36 @@ async function loadPerformance(token) {
 
                 <div class="home-priority-list">
 
-                    ${priorities.map(topic => `
+                    ${priorities.map(topic => {
+                        const accuracy = Math.max(0, Math.min(100, Number(topic.accuracy) || 0));
+                        const correct = Math.max(0, Number(topic.correct) || 0);
+                        const incorrect = Math.max(0, Number(topic.incorrect) || 0);
+                        return `
 
                         <div class="home-priority-row">
 
                             <div>
 
                                 <strong>
-                                    ${topic.topic}
+                                    ${escapeHtml(topic.topic)}
                                 </strong>
 
                                 <span>
-                                    ${topic.correct} acertos
+                                    ${correct} acertos
                                     ·
-                                    ${topic.incorrect} erros
+                                    ${incorrect} erros
                                 </span>
 
                             </div>
 
                             <strong>
-                                ${topic.accuracy}%
+                                ${accuracy}%
                             </strong>
 
                         </div>
 
-                    `).join("")}
+                    `;
+                    }).join("")}
 
                 </div>
 
@@ -457,18 +549,23 @@ async function loadPerformance(token) {
 
             <div class="topic-performance-list">
 
-                ${data.topics.map(topic => `
+                ${data.topics.map(topic => {
+                    const accuracy = Math.max(0, Math.min(100, Number(topic.accuracy) || 0));
+                    const correct = Math.max(0, Number(topic.correct) || 0);
+                    const incorrect = Math.max(0, Number(topic.incorrect) || 0);
+                    const total = Math.max(0, Number(topic.total) || 0);
+                    return `
 
                     <div class="topic-performance-row">
 
                         <div class="topic-performance-header">
 
                             <strong>
-                                ${topic.topic}
+                                ${escapeHtml(topic.topic)}
                             </strong>
 
                             <span>
-                                ${topic.accuracy}%
+                                ${accuracy}%
                             </span>
 
                         </div>
@@ -478,7 +575,7 @@ async function loadPerformance(token) {
 
                             <div
                                 class="progress-fill"
-                                style="width: ${topic.accuracy}%"
+                                style="width: ${accuracy}%"
                             ></div>
 
                         </div>
@@ -487,22 +584,23 @@ async function loadPerformance(token) {
                         <div class="topic-performance-footer">
 
                             <span>
-                                ${topic.correct} acertos
+                                ${correct} acertos
                             </span>
 
                             <span>
-                                ${topic.incorrect} erros
+                                ${incorrect} erros
                             </span>
 
                             <span>
-                                ${topic.total} questões
+                                ${total} questões
                             </span>
 
                         </div>
 
                     </div>
 
-                `).join("")}
+                `;
+                }).join("")}
 
             </div>
 
@@ -794,7 +892,7 @@ async function loadStudyPlan(token) {
                     </strong>
 
                     <span>
-                        ${data.detail || "Não foi possível gerar o plano."}
+                        ${escapeHtml(data.detail || "Não foi possível gerar o plano.")}
                     </span>
 
                 </div>
@@ -908,14 +1006,14 @@ function renderStudyPlan(plan) {
 
         return `
 
-            <div class="study-plan-content">
+            <div class="study-plan-content" data-no-translate>
 
                 ${Object.entries(plan).map(([key, value]) => `
 
                     <div class="study-plan-block">
 
                         <h3>
-                            ${formatStudyPlanKey(key)}
+                            ${escapeHtml(formatStudyPlanKey(key))}
                         </h3>
 
                         <div>
@@ -963,8 +1061,12 @@ function escapeHtml(value) {
 
 }
 
+function localizedText(value) {
+    return window.AdaptiveI18n?.translateText(value) || value;
+}
 
-function registerDeleteActions() {
+
+function registerDeleteActions(userNamesById) {
 
     const deleteButtons =
         document.querySelectorAll(".delete-button");
@@ -978,13 +1080,12 @@ function registerDeleteActions() {
                 button.dataset.userId;
 
             const userName =
-                button.dataset.userName;
+                userNamesById.get(String(userId)) || "este usuário";
 
 
-            const confirmed =
-                confirm(
-                    `Tem certeza que deseja excluir o usuário "${userName}"?`
-                );
+            const confirmed = confirm(window.AdaptiveI18n?.getLanguage() === "en"
+                ? `Delete "${userName}"? Their assessments and related submissions will also be removed. This cannot be undone.`
+                : `Excluir a conta "${userName}"? As avaliações e respostas vinculadas também serão removidas. Esta ação não pode ser desfeita.`);
 
 
             if (!confirmed) {
@@ -1017,8 +1118,8 @@ function registerDeleteActions() {
                 if (!response.ok) {
 
                     alert(
-                        data.detail ||
-                        "Não foi possível excluir o usuário."
+                        localizedText(data.detail) ||
+                        localizedText("Não foi possível excluir o usuário.")
                     );
 
                     return;
@@ -1026,11 +1127,12 @@ function registerDeleteActions() {
 
 
                 alert(
-                    "Usuário excluído com sucesso."
+                    localizedText("Usuário excluído com sucesso.")
                 );
 
 
-                loadAdminUsers(token);
+                await loadAdminUsers(token);
+                loadAdminOverview(token);
 
 
             } catch (error) {
@@ -1038,7 +1140,7 @@ function registerDeleteActions() {
                 console.error(error);
 
                 alert(
-                    "Não foi possível conectar com a API."
+                    localizedText("Não foi possível conectar com a API.")
                 );
 
             }
@@ -1068,13 +1170,14 @@ function registerRoleActions() {
                 });
                 const data = await response.json();
                 if (!response.ok) {
-                    alert(data.detail || "Não foi possível alterar a função.");
+                    alert(localizedText(data.detail || "Não foi possível alterar a função."));
                     return;
                 }
                 await loadAdminUsers(token);
+                loadAdminOverview(token);
             } catch (error) {
                 console.error(error);
-                alert("Não foi possível conectar com a API.");
+                alert(localizedText("Não foi possível conectar com a API."));
             } finally {
                 button.disabled = false;
             }
@@ -1127,41 +1230,22 @@ async function loadCurrentUser() {
             await response.json();
 
 
-        currentUserId =
-            user.id;
+        syncAccountUI(user);
 
 
         /*
          * Carregamento dos dados
          */
 
-        if (user.role !== "TEACHER") {
+        if (user.role === "STUDENT") {
             loadHistory(token);
             loadPerformance(token);
         }
 
-
-        userName.textContent =
-            user.name;
-
-        userNameShort.textContent =
-            user.name;
-
-        const roleNames = { STUDENT: "Estudante", TEACHER: "Professor", ADMIN: "Administrador" };
-        const initials = String(user.name || "AL").trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toLocaleUpperCase("pt-BR");
-        if (userAvatar) userAvatar.textContent = initials || "AL";
-        if (userRoleLabel) userRoleLabel.textContent = roleNames[user.role] || "Conta";
-        const settingsName = document.getElementById("settings-account-name");
-        const settingsEmail = document.getElementById("settings-account-email");
-        const settingsRole = document.getElementById("settings-account-role");
-        if (settingsName) settingsName.textContent = user.name || "—";
-        if (settingsEmail) settingsEmail.textContent = user.email || "—";
-        if (settingsRole) settingsRole.textContent = roleNames[user.role] || "Conta";
-
         const examMenuLabel = document.querySelector('.menu-item[data-section="exam"] span:last-child');
         const homeExamTitle = startExamButton?.parentElement?.querySelector("h3");
         const homeExamDescription = startExamButton?.parentElement?.querySelector("p");
-        if (user.role === "TEACHER" || user.role === "ADMIN") {
+        if (user.role === "TEACHER") {
             if (examMenuLabel) examMenuLabel.textContent = "Gerenciar avaliações";
             if (homeExamTitle) homeExamTitle.textContent = "Publicar uma avaliação";
             if (homeExamDescription) homeExamDescription.textContent = "Cadastre questões e gabaritos oficiais e acompanhe as respostas dos estudantes.";
@@ -1175,6 +1259,7 @@ async function loadCurrentUser() {
 
 
         if (user.role === "TEACHER") {
+            if (adminUsersMenu) adminUsersMenu.style.display = "none";
             ["history", "profile", "study-plan", "about"].forEach(sectionName => {
                 const menuItem = document.querySelector(
                     `.menu-item[data-section="${sectionName}"]`
@@ -1200,11 +1285,25 @@ async function loadCurrentUser() {
         }
 
         if (user.role === "ADMIN") {
-
-            adminUsersMenu.style.display = "flex";
-
+            if (adminUsersMenu) adminUsersMenu.style.display = "flex";
+            ["exam", "history", "profile", "study-plan", "about"].forEach(sectionName => {
+                const menuItem = document.querySelector(`.menu-item[data-section="${sectionName}"]`);
+                if (menuItem) menuItem.style.display = "none";
+            });
+            ["home-student-performance-card", "home-study-priorities-card", "home-learning-info", "start-exam-button"]
+                .forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.style.display = "none";
+                });
+            startExamButton?.closest(".highlight-card")?.style.setProperty("display", "none");
+            const adminOverview = document.getElementById("home-admin-overview");
+            if (adminOverview) adminOverview.style.display = "block";
+            const welcomeEyebrow = document.getElementById("welcome-eyebrow");
+            const welcomeText = document.getElementById("welcome-text");
+            if (welcomeEyebrow) welcomeEyebrow.textContent = "ÁREA DO ADMINISTRADOR";
+            if (welcomeText) welcomeText.textContent = "Acompanhe a plataforma e gerencie contas e permissões.";
             loadAdminUsers(token);
-
+            loadAdminOverview(token);
         }
 
         let preferredSection = "home";
@@ -1214,7 +1313,7 @@ async function loadCurrentUser() {
             preferredSection = window.location.hash.slice(1) || "home";
         }
         const preferredMenuItem = [...menuItems].find(item => item.dataset.section === preferredSection);
-        if (!preferredMenuItem || preferredMenuItem.style.display === "none") preferredSection = "home";
+        if (!preferredMenuItem || !document.getElementById(`${preferredSection}-section`) || preferredMenuItem.style.display === "none") preferredSection = "home";
         if (preferredSection !== "exam") showSection(preferredSection);
 
 
@@ -1256,6 +1355,12 @@ menuItems.forEach(item => {
             return;
         }
 
+        if (section === "account") {
+            openAccount();
+            closeMenu();
+            return;
+        }
+
         if (navSearch) navSearch.value = "";
         if (sidebarNavSearch) sidebarNavSearch.value = "";
         filterNavigation("");
@@ -1263,6 +1368,64 @@ menuItems.forEach(item => {
 
     });
 
+});
+
+
+openAccountButton?.addEventListener("click", openAccount);
+document.getElementById("close-account-dialog")?.addEventListener("click", () => accountDialog?.close());
+document.getElementById("open-admin-users-button")?.addEventListener("click", () => showSection("admin-users"));
+
+accountDialog?.addEventListener("click", event => {
+    if (event.target === accountDialog) accountDialog.close();
+});
+
+document.getElementById("account-profile-form")?.addEventListener("submit", async event => {
+    event.preventDefault();
+    const status = document.getElementById("profile-status");
+    const button = event.currentTarget.querySelector('[type="submit"]');
+    button.disabled = true;
+    status.textContent = "Salvando…";
+    try {
+        const user = await apiRequest("/auth/me/profile", {
+            method: "PATCH",
+            body: JSON.stringify({ name: document.getElementById("account-name-input").value.trim() }),
+        });
+        syncAccountUI(user);
+        status.textContent = "Nome atualizado com sucesso.";
+    } catch (error) {
+        status.textContent = error.message;
+    } finally {
+        button.disabled = false;
+    }
+});
+
+document.getElementById("account-password-form")?.addEventListener("submit", async event => {
+    event.preventDefault();
+    const status = document.getElementById("password-status");
+    const form = event.currentTarget;
+    const button = form.querySelector('[type="submit"]');
+    const newPassword = document.getElementById("new-password-input").value;
+    if (newPassword !== document.getElementById("confirm-password-input").value) {
+        status.textContent = "As senhas novas não coincidem.";
+        return;
+    }
+    button.disabled = true;
+    status.textContent = "Atualizando…";
+    try {
+        const result = await apiRequest("/auth/me/password", {
+            method: "PUT",
+            body: JSON.stringify({
+                current_password: document.getElementById("current-password-input").value,
+                new_password: newPassword,
+            }),
+        });
+        status.textContent = result.message || "Senha atualizada com sucesso.";
+        form.reset();
+    } catch (error) {
+        status.textContent = error.message;
+    } finally {
+        button.disabled = false;
+    }
 });
 
 function filterNavigation(value) {

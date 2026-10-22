@@ -29,7 +29,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials, db: Session) -> 
 
 
 def require_manager(user: User) -> None:
-    if user.role not in {"ADMIN", "TEACHER"}:
+    if user.role != "TEACHER":
         raise HTTPException(status_code=403, detail="Acesso de professor necessário.")
 
 
@@ -41,9 +41,7 @@ def get_assessment_or_404(assessment_id: int, db: Session) -> Assessment:
 
 
 def can_manage(user: User, assessment: Assessment) -> bool:
-    return user.role == "ADMIN" or (
-        user.role == "TEACHER" and assessment.teacher_id == user.id
-    )
+    return user.role == "TEACHER" and assessment.teacher_id == user.id
 
 
 @router.post("")
@@ -102,7 +100,7 @@ def list_assessments(
         query = query.filter(Assessment.is_published.is_(True))
     elif user.role == "TEACHER":
         query = query.filter(Assessment.teacher_id == user.id)
-    elif user.role != "ADMIN":
+    else:
         raise HTTPException(status_code=403, detail="Acesso não autorizado.")
 
     rows = query.order_by(Assessment.created_at.desc()).all()

@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self' https://vlibras.gov.br; style-src 'self' 'unsafe-inline' https://vlibras.gov.br; img-src 'self' data: blob: https://vlibras.gov.br; font-src 'self' data: https://vlibras.gov.br; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https://vlibras.gov.br; frame-src https://vlibras.gov.br">
     <script src="js/theme-init.js"></script>
 
     <title>Painel | Adaptive Learning</title>
@@ -37,10 +38,10 @@
         </label>
 
 
-        <div class="topbar-user">
+        <button class="topbar-user" id="open-account-button" type="button" aria-label="Abrir meu perfil">
             <span class="user-avatar" id="user-avatar" aria-hidden="true">AL</span>
-            <span class="user-topbar-copy"><strong id="user-name-short"></strong><small id="user-role-label">Conta</small></span>
-        </div>
+            <span class="user-topbar-copy"><strong id="user-name-short" data-no-translate></strong><small id="user-role-label">Conta</small></span>
+        </button>
 
     </header>
 
@@ -113,6 +114,10 @@
             </button>
 
             <span class="nav-group-label nav-group-label-secondary">PREFERÊNCIAS</span>
+            <button class="menu-item" id="open-account-menu" data-section="account" type="button">
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+                <span>Minha conta</span>
+            </button>
             <button class="menu-item" data-section="settings" type="button">
                 <span aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.2 1-1.2 2.1-1.5-.5a8 8 0 0 1-1.5.9l-.3 1.6h-2.4l-.3-1.6a8 8 0 0 1-1.5-.9l-1.5.5-1.2-2.1 1.2-1a7 7 0 0 1 0-1.8l-1.2-1 1.2-2.1 1.5.5a8 8 0 0 1 1.5-.9l.3-1.6h2.4l.3 1.6a8 8 0 0 1 1.5.9l1.5-.5 1.2 2.1-1.2 1a7 7 0 0 1 0 1.8z"/></svg></span>
                 <span>Configurações</span>
@@ -156,7 +161,7 @@
                 </p>
 
                 <h1>
-                    Olá, <span id="user-name"></span> 👋
+                    Olá, <span id="user-name" data-no-translate></span> 👋
                 </h1>
 
                 <p id="welcome-text" class="welcome-text">
@@ -168,6 +173,20 @@
 
 
             <div class="dashboard-grid">
+
+                <section id="home-admin-overview" class="admin-overview-card" style="display:none" aria-labelledby="admin-overview-title">
+                    <div class="admin-overview-heading">
+                        <div><p class="eyebrow">ÁREA ADMINISTRATIVA</p><h2 id="admin-overview-title">Visão geral do sistema</h2><p>Indicadores da plataforma e gestão de contas.</p></div>
+                        <button class="primary-button" id="open-admin-users-button" type="button">Gerenciar contas</button>
+                    </div>
+                    <div class="admin-metrics" aria-live="polite">
+                        <article><span>Contas</span><strong id="admin-metric-users">—</strong></article>
+                        <article><span>Estudantes</span><strong id="admin-metric-students">—</strong></article>
+                        <article><span>Professores</span><strong id="admin-metric-teachers">—</strong></article>
+                        <article><span>Avaliações publicadas</span><strong id="admin-metric-assessments">—</strong></article>
+                    </div>
+                    <p class="admin-overview-note" id="admin-overview-note">Carregando indicadores…</p>
+                </section>
 
 
                 <!-- Card principal -->
@@ -253,7 +272,7 @@
                         Conteúdos que atualmente precisam de mais atenção.
                     </p>
 
-                    <div id="home-priorities">
+                    <div id="home-priorities" data-no-translate>
 
                         <div class="empty-state">
 
@@ -379,11 +398,17 @@
 
                     <section class="settings-card" aria-labelledby="language-title">
                         <div class="settings-card-heading"><span class="settings-icon" aria-hidden="true">文</span><div><h2 id="language-title">Idioma</h2><p>Idioma atual da interface.</p></div></div>
-                        <div class="settings-control-row"><div><label for="language-setting">Idioma</label><small>Outros idiomas serão disponibilizados quando toda a interface estiver traduzida.</small></div><select id="language-setting" disabled><option>Português (Brasil)</option></select></div>
+                        <div class="settings-control-row"><div><label for="language-setting">Idioma</label><small>Altera os textos da interface; enunciados e respostas permanecem no idioma original.</small></div><select id="language-setting"><option value="pt-BR">Português (Brasil)</option><option value="en">English</option></select></div>
+                    </section>
+
+                    <section class="settings-card" aria-labelledby="comfort-title">
+                        <div class="settings-card-heading"><span class="settings-icon" aria-hidden="true">Aa</span><div><h2 id="comfort-title">Conforto de leitura</h2><p>Reduza distrações e destaque os controles da página.</p></div></div>
+                        <div class="settings-control-row"><div><label for="reading-mode-setting">Modo de leitura</label><small>Amplia o espaçamento e limita a largura dos textos longos.</small></div><label class="switch"><input id="reading-mode-setting" type="checkbox"><span class="switch-track" aria-hidden="true"></span><span class="sr-only">Ativar modo de leitura</span></label></div>
+                        <div class="settings-control-row"><div><label for="link-highlight-setting">Destacar links</label><small>Aplica sublinhado permanente aos links.</small></div><label class="switch"><input id="link-highlight-setting" type="checkbox"><span class="switch-track" aria-hidden="true"></span><span class="sr-only">Destacar links</span></label></div>
                     </section>
 
                     <section class="settings-card settings-reset-card" aria-labelledby="reset-settings-title">
-                        <div><h2 id="reset-settings-title">Restaurar preferências</h2><p>Volta ao tema automático, tamanho padrão e acessibilidade desativada.</p></div>
+                        <div><h2 id="reset-settings-title">Restaurar preferências</h2><p>Volta ao tema automático e aos ajustes padrão de leitura e acessibilidade.</p></div>
                         <button id="reset-settings-button" class="secondary-button" type="button">Restaurar padrão</button>
                     </section>
                     <p id="settings-status" class="settings-status" role="status" aria-live="polite"></p>
@@ -392,7 +417,7 @@
                 <aside class="settings-side-column">
                     <section class="settings-card account-settings-card" aria-labelledby="account-settings-title">
                         <p class="eyebrow">SUA CONTA</p><h2 id="account-settings-title">Dados do perfil</h2>
-                        <dl class="account-details"><div><dt>Nome</dt><dd id="settings-account-name">Carregando…</dd></div><div><dt>E-mail</dt><dd id="settings-account-email">—</dd></div><div><dt>Perfil</dt><dd id="settings-account-role">—</dd></div></dl>
+                        <dl class="account-details"><div><dt>Nome</dt><dd id="settings-account-name" data-no-translate>Carregando…</dd></div><div><dt>E-mail</dt><dd id="settings-account-email" data-no-translate>—</dd></div><div><dt>Perfil</dt><dd id="settings-account-role">—</dd></div></dl>
                     </section>
                     <section class="settings-card shortcuts-card" aria-labelledby="shortcuts-title">
                         <p class="eyebrow">ATALHOS</p><h2 id="shortcuts-title">Navegue mais rápido</h2>
@@ -480,7 +505,7 @@
             </div>
 
 
-            <div id="history-container" class="dashboard-card">
+            <div id="history-container" class="dashboard-card" data-no-translate>
                 <div class="history-loading" role="status">
                     <span class="loading-spinner" aria-hidden="true"></span>
                     <div><strong>Carregando histórico</strong><span>Buscando suas tentativas recentes.</span></div>
@@ -504,7 +529,7 @@
                 </p>
 
                 <h1>
-                    Meu perfil
+                    Meu desempenho
                 </h1>
 
                 <p>
@@ -586,7 +611,7 @@
                 </div>
 
 
-                <div id="topic-performance-container">
+                <div id="topic-performance-container" data-no-translate>
 
                     <div class="empty-state">
                         <strong>
@@ -747,7 +772,7 @@
                 </h1>
 
                 <p>
-                    Gerencie as contas e promova estudantes para professor quando necessário.
+                    Gerencie contas e permissões. Professores podem criar avaliações e acompanhar respostas.
                 </p>
 
             </div>
@@ -765,9 +790,33 @@
 
     </main>
 
+    <dialog id="account-dialog" class="account-dialog" aria-labelledby="account-dialog-title">
+        <div class="account-dialog-header"><div><p class="eyebrow">PERFIL E SEGURANÇA</p><h2 id="account-dialog-title">Minha conta</h2></div><button id="close-account-dialog" class="accessibility-close" type="button" aria-label="Fechar perfil">×</button></div>
+        <div class="account-dialog-body">
+            <form id="account-profile-form" class="account-form">
+                <h3>Dados pessoais</h3>
+                <label for="account-name-input">Nome</label><input id="account-name-input" name="name" type="text" maxlength="150" required>
+                <label for="account-email-input">E-mail</label><input id="account-email-input" type="email" disabled>
+                <p class="field-help">O e-mail é usado para entrar e não pode ser alterado nesta tela.</p>
+                <button class="primary-button" type="submit">Salvar nome</button>
+                <p id="profile-status" class="form-status" role="status" aria-live="polite"></p>
+            </form>
+            <form id="account-password-form" class="account-form">
+                <h3>Alterar senha</h3>
+                <label for="current-password-input">Senha atual</label><input id="current-password-input" type="password" autocomplete="current-password" required>
+                <label for="new-password-input">Nova senha</label><input id="new-password-input" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
+                <small>Use pelo menos 12 caracteres.</small>
+                <label for="confirm-password-input">Confirmar nova senha</label><input id="confirm-password-input" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
+                <button class="primary-button" type="submit">Atualizar senha</button>
+                <p id="password-status" class="form-status" role="status" aria-live="polite"></p>
+            </form>
+        </div>
+    </dialog>
+
 
     <script defer src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/i18n.js"></script>
     <script src="js/dashboard.js"></script>
 
 </body>

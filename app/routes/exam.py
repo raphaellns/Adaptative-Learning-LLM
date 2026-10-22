@@ -34,7 +34,7 @@ def analyze_exam(
             detail="Usuário não encontrado."
         )
 
-    if user.role not in {"ADMIN", "TEACHER"}:
+    if user.role != "TEACHER":
         raise HTTPException(
             status_code=403,
             detail="A correção de respostas de estudantes deve usar uma avaliação publicada.",

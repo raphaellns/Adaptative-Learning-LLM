@@ -45,7 +45,7 @@ async function initialize() {
 
     try {
         const user = await apiRequest("/auth/me");
-        if (user.role === "TEACHER" || user.role === "ADMIN") {
+        if (user.role === "TEACHER") {
             renderTeacherWorkspace(user);
         } else if (user.role === "STUDENT") {
             renderStudentWorkspace();
@@ -307,7 +307,7 @@ async function loadTeacherAssessments() {
         }
         list.innerHTML = assessments.map(item => `
             <article class="assessment-item">
-                <div><strong>${escapeHtml(item.title)}</strong><span>${item.question_count} questão(ões) · ${escapeHtml(item.teacher_name)}</span></div>
+                <div><strong data-no-translate>${escapeHtml(item.title)}</strong><span>${item.question_count} questão(ões) · <span data-no-translate>${escapeHtml(item.teacher_name)}</span></span></div>
                 <button type="button" class="secondary-button view-submissions" data-assessment-id="${item.id}" data-assessment-title="${escapeHtml(item.title)}">Ver respostas</button>
             </article>
         `).join("");
@@ -365,7 +365,7 @@ async function loadStudentAssessments() {
         }
         list.innerHTML = assessments.map(item => `
             <article class="assessment-item">
-                <div><strong>${escapeHtml(item.title)}</strong><span>${item.question_count} questão(ões) · Professor(a): ${escapeHtml(item.teacher_name)}</span></div>
+                <div><strong data-no-translate>${escapeHtml(item.title)}</strong><span>${item.question_count} questão(ões) · Professor(a): <span data-no-translate>${escapeHtml(item.teacher_name)}</span></span></div>
                 <button type="button" class="primary-button open-assessment" data-assessment-id="${item.id}" data-assessment-title="${escapeHtml(item.title)}">Abrir</button>
             </article>
         `).join("");
@@ -385,7 +385,7 @@ async function openAssessment(assessmentId, title) {
     try {
         const questions = await apiRequest(`/assessments/${assessmentId}/questions`);
         section.innerHTML = `
-            <div class="question-card-header"><h2>${escapeHtml(title)}</h2><button id="back-to-assessments" class="secondary-button" type="button">Voltar às avaliações</button></div>
+            <div class="question-card-header"><h2 data-no-translate>${escapeHtml(title)}</h2><button id="back-to-assessments" class="secondary-button" type="button">Voltar às avaliações</button></div>
             <p class="field-help">Envie a prova completa de uma vez ou abra cada questão para enviar uma foto da resposta. Revise toda transcrição antes de enviar para correção.</p>
             <ol id="student-workflow-progress" class="workflow-progress student-workflow-progress" aria-label="Etapas para responder uma avaliação">
                 <li data-process-step="photo" aria-current="step"><span>01</span><div><strong>Foto</strong><small>Envie a página ou a resposta</small></div></li>
@@ -435,7 +435,7 @@ function renderStudentQuestion(container, assessmentId, question) {
     card.dataset.questionId = question.id;
     card.innerHTML = `
         <div class="question-card-header"><h3>Questão ${question.order}</h3></div>
-        <div class="assessment-question-text">${escapeHtml(question.question).replace(/\n/g, "<br>")}</div>
+        <div class="assessment-question-text" data-no-translate>${escapeHtml(question.question).replace(/\n/g, "<br>")}</div>
         <div class="form-group ocr-group">
             <label>Foto da sua resposta</label>
             <p class="field-help">Se a foto incluir o enunciado e sua resposta, use Qwen-VL para extrair só o que você escreveu. Com Tesseract, recorte apenas sua resposta.</p>
@@ -545,9 +545,9 @@ function renderStudentFeedback(container, analysis, elapsed) {
     container.innerHTML = `
         <section class="feedback-result ${analysis.correta ? "correct" : "incorrect"}">
             <h4>${analysis.correta ? "Resposta correta" : "Resposta incorreta"}</h4>
-            <p>${escapeHtml(analysis.explicacao)}</p>
-            ${analysis.erro_principal ? `<p><b>O que revisar:</b> ${escapeHtml(analysis.erro_principal)}</p>` : ""}
-            ${analysis.topico ? `<p><b>Tópico:</b> ${escapeHtml(analysis.topico)}</p>` : ""}
+            <p data-no-translate>${escapeHtml(analysis.explicacao)}</p>
+            ${analysis.erro_principal ? `<p><b>O que revisar:</b> <span data-no-translate>${escapeHtml(analysis.erro_principal)}</span></p>` : ""}
+            ${analysis.topico ? `<p><b>Tópico:</b> <span data-no-translate>${escapeHtml(analysis.topico)}</span></p>` : ""}
             ${Number.isFinite(elapsed) ? `<small>Correção em ${Number(elapsed).toFixed(2)} s · Resposta salva no seu histórico.</small>` : `<small>Resposta salva no seu histórico.</small>`}
         </section>
     `;

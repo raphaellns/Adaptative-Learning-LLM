@@ -54,7 +54,7 @@ O plano usa evidências acumuladas de todas as avaliações, mas envia ao modelo
 
 ## Requisitos
 
-- Python 3.10 ou superior
+- Python 3.11 ou superior (Pillow 13 deixou de suportar Python 3.10)
 - PostgreSQL
 - Ollama com os modelos configurados abaixo
 - Tesseract OCR e dados do idioma português (`por`) para o modo de texto impresso
@@ -68,6 +68,8 @@ Modelos padrão usados pelo projeto:
 ANALYSIS_MODEL=qwen3:4b
 STUDY_PLAN_MODEL=qwen3:4b
 OCR_VISION_MODEL=qwen3-vl:4b-instruct
+LLM_TIMEOUT=180
+OLLAMA_MAX_CONCURRENT=1
 ```
 
 Os nomes podem ser alterados por variáveis de ambiente. Os modelos precisam estar disponíveis no Ollama do computador que executa a API. A primeira inferência após descarregar um modelo pode levar mais tempo; o desempenho também depende de RAM/VRAM e da resolução da imagem.
@@ -105,9 +107,13 @@ CORS_ALLOWED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
 ANALYSIS_MODEL=qwen3:4b
 STUDY_PLAN_MODEL=qwen3:4b
 OCR_VISION_MODEL=qwen3-vl:4b-instruct
+LLM_TIMEOUT=180
+OLLAMA_MAX_CONCURRENT=1
 ```
 
-Gere a chave antes de preencher o `.env` com `python -c 'import secrets; print(secrets.token_hex(32))'`. O backend rejeita chaves JWT com menos de 32 bytes e os tokens expiram após uma hora. Nunca envie o `.env` ao Git ou compartilhe o seu conteúdo. Para publicar a API, use HTTPS, senha forte para o usuário do PostgreSQL e configure `CORS_ALLOWED_ORIGINS` com as origens exatas do frontend. Este protótipo ainda não tem limitação de tentativas no login nem controle distribuído de chamadas caras de OCR/LLM; não o exponha diretamente à internet antes de adicionar esses controles e migrar os tokens do `localStorage` para uma sessão protegida com proteção CSRF.
+Gere a chave antes de preencher o `.env` com `python -c 'import secrets; print(secrets.token_hex(32))'`. O backend rejeita chaves JWT com menos de 32 bytes e os tokens expiram após uma hora. Nunca envie o `.env` ao Git ou compartilhe o seu conteúdo. Para publicar a API, use HTTPS, senha forte para o usuário do PostgreSQL e configure `CORS_ALLOWED_ORIGINS` com as origens exatas do frontend.
+
+A API aplica limites locais por IP a login e cadastro e por IP/conta a OCR e envio de respostas, rejeita corpos HTTP acima de 8 MB (JSON) ou 27 MB (uploads), limita reenvios rápidos por questão e mantém no máximo uma chamada simultânea ao Ollama por processo. Esses limites em memória são adequados para o protótipo local, mas reiniciam junto com a API e não são compartilhados entre vários processos. A política CSP do frontend também precisa ser ajustada se a API for publicada em outro endereço. Antes de expor o sistema à internet, configure limites de corpo e rate limiting distribuído no proxy/API gateway, e migre os tokens do `localStorage` para uma sessão protegida com proteção CSRF.
 
 Para uma base nova, crie o banco e execute `database/schema.sql` com uma conta que possa criar as tabelas. Para uma base existente que já contém usuários, provas e análises, execute `database/migrations/001_assessment_workflow.sql` como proprietária do schema `public`, informando o nome da conta de execução da API:
 
@@ -117,7 +123,7 @@ psql "$DATABASE_OWNER_URL" \
   -f database/migrations/001_assessment_workflow.sql
 ```
 
-`DATABASE_OWNER_URL` é uma variável de exemplo para a conexão administrativa; não use a senha da conta de execução da API como proprietária do banco. O valor de `app_role` deve corresponder ao usuário presente em `DATABASE_URL`.
+O valor de `app_role` deve corresponder ao usuário presente em `DATABASE_URL`.
 
 Inicie a API:
 
@@ -151,6 +157,9 @@ O professor não precisa cadastrar a resposta do aluno. Ele informa a solução 
 | Método e rota | Uso |
 |---|---|
 | `POST /auth/register`, `POST /auth/login` | Criar conta e iniciar sessão |
+| `GET /auth/me`, `PATCH /auth/me/profile` | Consultar a conta e atualizar o nome próprio |
+| `PUT /auth/me/password` | Alterar a senha após confirmar a senha atual |
+| `GET /admin/overview`, `GET /admin/users` | Indicadores agregados e gestão de contas (somente administrador) |
 | `POST /assessments` | Professor cria uma avaliação e suas questões |
 | `GET /assessments` | Lista avaliações disponíveis conforme o papel |
 | `GET /assessments/{id}/questions` | Busca enunciados; o gabarito só é devolvido a quem pode gerenciar a avaliação |
@@ -164,7 +173,7 @@ O professor não precisa cadastrar a resposta do aluno. Ele informa a solução 
 | `GET /profile/performance` | Calcula desempenho acumulado e aproveitamento por tópico |
 | `GET /profile/study-plan` | Gera ou reutiliza o plano para o histórico atual |
 
-As rotas protegidas exigem o token recebido no login. A API não aceita o gabarito enviado pelo aluno no corpo da submissão.
+As rotas protegidas exigem o token recebido no login. Professor cria avaliações e consulta as respostas; aluno responde avaliações publicadas; administrador gerencia contas e vê indicadores agregados. O administrador não publica nem corrige avaliações. A API não aceita o gabarito enviado pelo aluno no corpo da submissão.
 
 ## OCR e limites de envio
 
@@ -180,6 +189,8 @@ Além de `DATABASE_URL` e dos modelos, é possível ajustar o OCR por ambiente:
 
 | Variável | Padrão | Efeito |
 |---|---:|---|
+| `LLM_TIMEOUT` | `180` | Prazo máximo de cada chamada ao Ollama para correção e plano, em segundos |
+| `OLLAMA_MAX_CONCURRENT` | `1` | Número de chamadas simultâneas ao Ollama neste processo da API |
 | `OCR_MAX_IMAGE_SIDE` | `1600` | Reduz fotos maiores antes de enviá-las ao modelo visual |
 | `OCR_VISION_TIMEOUT` | `120` | Prazo máximo de uma chamada visual, em segundos |
 | `OCR_NUM_CTX` | `8192` | Contexto usado no Ollama visual |

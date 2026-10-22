@@ -315,5 +315,5 @@ def _validate_user(
 
 
 def _require_teacher(user: User) -> None:
-    if user.role not in {"ADMIN", "TEACHER"}:
+    if user.role != "TEACHER":
         raise HTTPException(status_code=403, detail="Acesso de professor necessário.")

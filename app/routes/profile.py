@@ -8,7 +8,7 @@ from app.study_priority import calculate_study_priorities
 
 from collections import OrderedDict, defaultdict
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -17,6 +17,7 @@ from app.database import get_db
 from app.models.analysis import Analysis
 from app.models.exam_question import ExamQuestion
 from app.models.exam import Exam
+from app.models.user import User
 
 
 router = APIRouter(
@@ -28,6 +29,14 @@ _STUDY_PLAN_CACHE: OrderedDict[tuple[int, str], dict] = OrderedDict()
 _STUDY_PLAN_CACHE_LIMIT = 64
 
 
+def require_student(user_id: int, db: Session) -> None:
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    if user.role != "STUDENT":
+        raise HTTPException(status_code=403, detail="O desempenho de aprendizagem é exclusivo do estudante.")
+
+
 @router.get("/performance")
 def get_performance(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -37,6 +46,7 @@ def get_performance(
     token = credentials.credentials
 
     user_id = get_user_id_from_token(token)
+    require_student(user_id, db)
 
 
     analyses = (
@@ -137,6 +147,7 @@ def get_study_plan(
 ):
     token = credentials.credentials
     user_id = get_user_id_from_token(token)
+    require_student(user_id, db)
 
     analyses = (
         db.query(Analysis)

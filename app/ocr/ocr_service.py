@@ -11,6 +11,7 @@ from ollama import Client
 from PIL import Image, ImageOps
 import pytesseract
 
+from app.ollama_runtime import ollama_slot
 
 load_dotenv()
 VISION_MODEL = os.getenv("OCR_VISION_MODEL", "qwen3-vl:4b-instruct")
@@ -384,6 +385,8 @@ def _run_vision_chat(
     first_token_logged = False
     _log(f"enviando para o Ollama ({VISION_MODEL}); aguardando primeiro token...")
     stream = None
+    ollama_slot_context = ollama_slot(VISION_TIMEOUT_SECONDS)
+    ollama_slot_context.__enter__()
     try:
         stream = client.chat(
             model=VISION_MODEL,
@@ -431,9 +434,12 @@ def _run_vision_chat(
             raise TimeoutError("O Ollama não respondeu a tempo.") from error
         raise
     finally:
-        close = getattr(stream, "close", None)
-        if close:
-            close()
+        try:
+            close = getattr(stream, "close", None)
+            if close:
+                close()
+        finally:
+            ollama_slot_context.__exit__(None, None, None)
 
     text = "".join(parts)
     if not text.strip() and stopped_early:
