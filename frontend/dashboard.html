@@ -649,18 +649,16 @@
             </div>
 
 
-            <div id="study-plan-container" class="dashboard-card">
+            <div id="study-plan-container" class="dashboard-card study-plan-panel" aria-live="polite">
 
-                <div class="empty-state">
-
-                    <strong>
-                        Carregando plano...
-                    </strong>
-
-                    <span>
-                        O sistema está analisando seu histórico.
-                    </span>
-
+                <div class="study-plan-start">
+                    <div class="study-plan-start-icon" aria-hidden="true">✦</div>
+                    <div>
+                        <p class="eyebrow">PRONTO QUANDO VOCÊ ESTIVER</p>
+                        <h2>Monte seu plano personalizado</h2>
+                        <p>A análise usa seu histórico completo de respostas. Ela só é iniciada quando você escolher gerar o plano.</p>
+                    </div>
+                    <button class="primary-button study-plan-generate-button" data-study-plan-action="generate" type="button">Gerar plano de estudos</button>
                 </div>
 
             </div>
@@ -815,6 +813,7 @@
 
 
     <script defer src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script src="js/config.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/i18n.js"></script>
     <script src="js/dashboard.js"></script>

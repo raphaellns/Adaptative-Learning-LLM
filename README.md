@@ -98,20 +98,15 @@ ollama pull qwen3:4b
 ollama pull qwen3-vl:4b-instruct
 ```
 
-Crie um arquivo `.env` na raiz do projeto:
+Crie a configuração local a partir do exemplo seguro:
 
-```env
-DATABASE_URL=postgresql://USUARIO:SENHA@localhost:5432/adaptive_learning
-JWT_SECRET_KEY=COLE_AQUI_A_CHAVE_ALEATORIA_GERADA
-CORS_ALLOWED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
-ANALYSIS_MODEL=qwen3:4b
-STUDY_PLAN_MODEL=qwen3:4b
-OCR_VISION_MODEL=qwen3-vl:4b-instruct
-LLM_TIMEOUT=180
-OLLAMA_MAX_CONCURRENT=1
+```bash
+cp .env.example .env
 ```
 
-Gere a chave antes de preencher o `.env` com `python -c 'import secrets; print(secrets.token_hex(32))'`. O backend rejeita chaves JWT com menos de 32 bytes e os tokens expiram após uma hora. Nunca envie o `.env` ao Git ou compartilhe o seu conteúdo. Para publicar a API, use HTTPS, senha forte para o usuário do PostgreSQL e configure `CORS_ALLOWED_ORIGINS` com as origens exatas do frontend.
+Edite os valores no `.env`: configure a conexão do PostgreSQL e gere a chave JWT com `python -c 'import secrets; print(secrets.token_hex(32))'`. O backend rejeita chaves com menos de 32 bytes e os tokens expiram após uma hora. Nunca envie o `.env` ao Git ou compartilhe o seu conteúdo. Para publicar a API, use HTTPS, senha forte para o usuário do PostgreSQL e configure `CORS_ALLOWED_ORIGINS` com as origens exatas do frontend.
+
+O endereço da API usado pelo navegador fica centralizado em `frontend/js/config.js`. Para uma implantação, altere `DEFAULT_API_BASE_URL` para o endereço HTTPS da API.
 
 A API aplica limites locais por IP a login e cadastro e por IP/conta a OCR e envio de respostas, rejeita corpos HTTP acima de 8 MB (JSON) ou 27 MB (uploads), limita reenvios rápidos por questão e mantém no máximo uma chamada simultânea ao Ollama por processo. Esses limites em memória são adequados para o protótipo local, mas reiniciam junto com a API e não são compartilhados entre vários processos. A política CSP do frontend também precisa ser ajustada se a API for publicada em outro endereço. Antes de expor o sistema à internet, configure limites de corpo e rate limiting distribuído no proxy/API gateway, e migre os tokens do `localStorage` para uma sessão protegida com proteção CSRF.
 
@@ -143,6 +138,8 @@ python3 -m http.server 5500
 
 Abra <http://127.0.0.1:5500>. A API já permite essa origem local para desenvolvimento.
 
+Para executar os testes determinísticos e os mesmos checks do GitHub Actions, rode `python -m unittest discover -s tests -v`. Eles usam a biblioteca padrão e não iniciam PostgreSQL nem Ollama.
+
 ## Primeiro acesso e papéis
 
 1. Cadastre uma conta pela tela de registro. Contas novas começam como `STUDENT`.
@@ -171,7 +168,7 @@ O professor não precisa cadastrar a resposta do aluno. Ele informa a solução 
 | `GET /assessments/{id}/submissions` | Professor consulta respostas e correções recebidas |
 | `GET /history/` e `GET /history/{exam_id}` | Aluno consulta tentativas próprias e feedback por questão |
 | `GET /profile/performance` | Calcula desempenho acumulado e aproveitamento por tópico |
-| `GET /profile/study-plan` | Gera ou reutiliza o plano para o histórico atual |
+| `POST /profile/study-plan` | Gera ou reutiliza o plano para o histórico atual, quando o estudante solicita na tela |
 
 As rotas protegidas exigem o token recebido no login. Professor cria avaliações e consulta as respostas; aluno responde avaliações publicadas; administrador gerencia contas e vê indicadores agregados. O administrador não publica nem corrige avaliações. A API não aceita o gabarito enviado pelo aluno no corpo da submissão.
 

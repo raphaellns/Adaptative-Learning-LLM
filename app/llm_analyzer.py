@@ -2,8 +2,10 @@ import json
 import os
 import re
 import time
+import unicodedata
 
 from dotenv import load_dotenv
+from fastapi import HTTPException
 from ollama import Client
 
 from app.ollama_runtime import LLM_TIMEOUT_SECONDS, ollama_slot
@@ -13,6 +15,42 @@ from app.topics import ALGORITHM_TOPICS
 load_dotenv()
 ANALYSIS_MODEL = os.getenv("ANALYSIS_MODEL", "qwen3:4b")
 _ollama_client = Client(timeout=LLM_TIMEOUT_SECONDS)
+_PROMPT_INJECTION_PATTERNS = (
+    re.compile(
+        r"\b(?:ignore|disregard|forget|ignora|desconsidere|esqueca)\b.{0,120}"
+        r"\b(?:prior|previous|anteriores?|instrucoes|instructions|regras|rules|prompt|system|sistema)\b",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
+        r"\b(?:revel\w*|reveal\w*|mostr\w*|show|transcrev\w*|transcrib\w*|copi\w*|cop\w*|cit\w*|quote\w*|imprim\w*|print\w*|"
+        r"exib\w*|display\w*|codifiqu\w*|encode\w*|convert\w*|escrev\w*|write\w*|list\w*)\b.{0,120}"
+        r"\b(?:gabarito|resposta oficial|answer key|solucao|solution)\b",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(r"\b(?:system|sistema)\s+(?:override|prompt)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(?:finj\w*|aja|act|pretend|assuma)\b.{0,80}"
+        r"\b(?:professor|system|sistema|assistente|assistant|desenvolvedor)\b",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
+        r"\b(?:marque|retorne|responda|classifique|mark|respond|classify)\b.{0,60}"
+        r"\b(?:as\s+)?(?:correta|correct)\b",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
+        r"\breturn\b.{0,60}\b(?:classification|classificacao)\b.{0,40}"
+        r"\b(?:as\s+)?(?:correct|correta)\b",
+        re.IGNORECASE | re.DOTALL,
+    ),
+)
+
+
+def _contains_prompt_injection(text):
+    normalized = unicodedata.normalize("NFKD", str(text or ""))
+    normalized = "".join(char for char in normalized if unicodedata.category(char) != "Cf")
+    normalized = normalized.encode("ascii", "ignore").decode("ascii").casefold()
+    return any(pattern.search(normalized) for pattern in _PROMPT_INJECTION_PATTERNS)
 
 
 def _build_answer_key_guard(answer_key):
@@ -47,7 +85,58 @@ def _hide_answer_key_echo(text, guard):
     return text
 
 
+def _normalize_analysis_result(result, answer_key):
+    """Validate and enforce consistent, student-safe fields from the model."""
+    if not isinstance(result, dict):
+        raise RuntimeError("A LLM retornou um objeto inválido.")
+
+    classification = result.get("classificacao")
+    topic = result.get("topico")
+    recommendations = result.get("recomendacoes")
+    if not isinstance(classification, str) or classification not in {"CORRETA", "INCORRETA"}:
+        raise RuntimeError("A LLM retornou uma classificação inválida.")
+    if topic not in ALGORITHM_TOPICS:
+        raise RuntimeError("A LLM retornou um tópico inválido.")
+    if not isinstance(result.get("erro_principal"), str):
+        raise RuntimeError("A LLM retornou um erro principal inválido.")
+    if not isinstance(result.get("explicacao"), str):
+        raise RuntimeError("A LLM retornou uma explicação inválida.")
+    if not isinstance(recommendations, list) or not all(
+        isinstance(item, str) for item in recommendations
+    ):
+        raise RuntimeError("A LLM retornou recomendações inválidas.")
+
+    answer_key_guard = _build_answer_key_guard(answer_key)
+    correct = classification == "CORRETA"
+    safe_main_error = "" if correct else _hide_answer_key_echo(
+        result["erro_principal"][:4000], answer_key_guard
+    )
+    safe_explanation = _hide_answer_key_echo(
+        result["explicacao"][:6000], answer_key_guard
+    )
+    safe_recommendations = [] if correct else [
+        _hide_answer_key_echo(item[:1000], answer_key_guard)
+        for item in recommendations[:8]
+    ]
+
+    return {
+        "correta": correct,
+        "topico": topic,
+        "erro_principal": safe_main_error,
+        "explicacao": safe_explanation,
+        "recomendacoes": safe_recommendations,
+    }
+
+
 def analyze_answer(question, answer_key, student_answer):
+    if _contains_prompt_injection(student_answer):
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Sua resposta parece conter comandos para alterar a correção. "
+                "Remova esses comandos e envie somente sua solução."
+            ),
+        )
 
     system_prompt = f"""
 Você é um professor de Algoritmos avaliando uma resposta de aluno.
@@ -194,6 +283,12 @@ Escolha exatamente UM tópico da lista abaixo:
 
 O tópico deve representar o PRINCIPAL CONCEITO PEDAGÓGICO COBRADO
 pela questão, e não simplesmente uma característica do código.
+Determine o tópico pela habilidade solicitada no ENUNCIADO. Um erro na
+resposta do aluno pode torná-la incorreta, mas não muda o tópico da questão.
+Por exemplo, se o enunciado pede uma decisão entre "Par" e "Ímpar" e o aluno
+escreve `if (numero % 2 = 0)`, o tópico continua sendo "Estruturas condicionais".
+Use "Sintaxe da linguagem C" somente quando a questão pedir para identificar
+ou corrigir sintaxe como objetivo principal.
 
 Para determinar o tópico, siga ESTA ORDEM DE PRIORIDADE:
 
@@ -446,37 +541,4 @@ Se for INCORRETA:
     print(f"Tempo de prompt: {response.prompt_eval_duration / 1e9:.2f}s")
     print(f"Tokens do prompt: {response.prompt_eval_count}")
 
-    if not isinstance(result, dict):
-        raise RuntimeError("A LLM retornou um objeto inválido.")
-
-    classification = result.get("classificacao")
-    topic = result.get("topico")
-    recommendations = result.get("recomendacoes")
-    if not isinstance(classification, str) or classification not in {"CORRETA", "INCORRETA"}:
-        raise RuntimeError("A LLM retornou uma classificação inválida.")
-    if topic not in ALGORITHM_TOPICS:
-        raise RuntimeError("A LLM retornou um tópico inválido.")
-    if not isinstance(result.get("erro_principal"), str):
-        raise RuntimeError("A LLM retornou um erro principal inválido.")
-    if not isinstance(result.get("explicacao"), str):
-        raise RuntimeError("A LLM retornou uma explicação inválida.")
-    if not isinstance(recommendations, list) or not all(
-        isinstance(item, str) for item in recommendations
-    ):
-        raise RuntimeError("A LLM retornou recomendações inválidas.")
-
-    answer_key_guard = _build_answer_key_guard(answer_key)
-    safe_main_error = _hide_answer_key_echo(result["erro_principal"][:4000], answer_key_guard)
-    safe_explanation = _hide_answer_key_echo(result["explicacao"][:6000], answer_key_guard)
-    safe_recommendations = [
-        _hide_answer_key_echo(item[:1000], answer_key_guard)
-        for item in recommendations[:8]
-    ]
-
-    return {
-        "correta": classification == "CORRETA",
-        "topico": topic,
-        "erro_principal": safe_main_error,
-        "explicacao": safe_explanation,
-        "recomendacoes": safe_recommendations,
-    }
+    return _normalize_analysis_result(result, answer_key)

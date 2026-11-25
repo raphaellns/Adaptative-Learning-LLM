@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = window.AdaptiveLearningConfig.apiBaseUrl;
 const workflow = document.getElementById("exam-workflow");
 const pageTitle = document.getElementById("workflow-title");
 const pageDescription = document.getElementById("workflow-description");

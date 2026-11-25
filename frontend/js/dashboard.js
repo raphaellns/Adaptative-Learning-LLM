@@ -57,12 +57,12 @@ const studyPlanContainer =
     document.getElementById("study-plan-container");
 
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = window.AdaptiveLearningConfig.apiBaseUrl;
 
 let currentUserId = null;
 let currentToken = null;
 let currentUser = null;
-let studyPlanLoaded = false;
+let studyPlanLoading = false;
 
 
 function userInitials(name) {
@@ -178,13 +178,6 @@ function showSection(sectionName) {
 
     closeMenu();
 
-
-    if (
-        sectionName === "study-plan" &&
-        !studyPlanLoaded
-    ) {
-        loadStudyPlan(currentToken);
-    }
 
 }
 
@@ -850,19 +843,34 @@ function renderHistoryDetails(data) {
 }
 
 
-async function loadStudyPlan(token) {
+function renderStudyPlanStart({ title, message, actionLabel = "Gerar plano de estudos", tone = "default" }) {
+    return `
+        <div class="study-plan-start${tone === "error" ? " study-plan-start-error" : ""}">
+            <div class="study-plan-start-icon" aria-hidden="true">${tone === "error" ? "!" : "✦"}</div>
+            <div>
+                <p class="eyebrow">${tone === "error" ? "TENTE NOVAMENTE" : "PRONTO QUANDO VOCÊ ESTIVER"}</p>
+                <h2>${escapeHtml(title)}</h2>
+                <p>${escapeHtml(message)}</p>
+            </div>
+            <button class="primary-button study-plan-generate-button" data-study-plan-action="generate" type="button">${escapeHtml(actionLabel)}</button>
+        </div>
+    `;
+}
+
+
+async function loadStudyPlan(token = currentToken) {
+
+    if (!token || studyPlanLoading) return;
+    studyPlanLoading = true;
+    studyPlanContainer.setAttribute("aria-busy", "true");
 
     studyPlanContainer.innerHTML = `
-        <div class="empty-state">
-
-            <strong>
-                Gerando plano de estudos...
-            </strong>
-
-            <span>
-                A IA está analisando seu histórico acumulado.
-            </span>
-
+        <div class="study-plan-loading">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <div>
+                <strong>Preparando seu plano de estudos</strong>
+                <span>A IA está analisando apenas os tópicos que precisam de atenção.</span>
+            </div>
         </div>
     `;
 
@@ -872,6 +880,7 @@ async function loadStudyPlan(token) {
         const response = await fetch(
             `${API_URL}/profile/study-plan`,
             {
+                method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -884,19 +893,12 @@ async function loadStudyPlan(token) {
 
         if (!response.ok) {
 
-            studyPlanContainer.innerHTML = `
-                <div class="empty-state">
-
-                    <strong>
-                        Erro
-                    </strong>
-
-                    <span>
-                        ${escapeHtml(data.detail || "Não foi possível gerar o plano.")}
-                    </span>
-
-                </div>
-            `;
+            studyPlanContainer.innerHTML = renderStudyPlanStart({
+                title: "Não foi possível gerar o plano",
+                message: data.detail || "Verifique a conexão com a API e tente novamente.",
+                actionLabel: "Tentar novamente",
+                tone: "error",
+            });
 
             return;
         }
@@ -904,32 +906,26 @@ async function loadStudyPlan(token) {
 
         if (!data.study_plan) {
 
-            studyPlanContainer.innerHTML = `
-                <div class="empty-state">
-
-                    <strong>
-                        Ainda não há dados suficientes
-                    </strong>
-
-                    <span>
-                        Faça algumas avaliações para gerar
-                        um plano personalizado.
-                    </span>
-
-                </div>
-            `;
+            studyPlanContainer.innerHTML = renderStudyPlanStart({
+                title: "Ainda não há respostas para analisar",
+                message: "Envie uma avaliação e volte aqui quando quiser criar seu plano personalizado.",
+                actionLabel: "Atualizar dados",
+            });
 
             return;
         }
 
         if (Array.isArray(data.study_plan.plano) && data.study_plan.plano.length === 0) {
             studyPlanContainer.innerHTML = `
-                <div class="empty-state">
-                    <strong>Sem tópicos prioritários por enquanto</strong>
-                    <span>Seu histórico não mostra erros que peçam um plano de recuperação. Novas respostas atualizam essa análise.</span>
+                <div class="study-plan-success-empty">
+                    <span aria-hidden="true">✓</span>
+                    <div>
+                        <strong>Sem tópicos prioritários por enquanto</strong>
+                        <p>Seu histórico não mostra dificuldades recorrentes. Quando novas respostas forem enviadas, você poderá atualizar esta análise.</p>
+                    </div>
+                    <button class="secondary-button" data-study-plan-action="generate" type="button">Atualizar análise</button>
                 </div>
             `;
-            studyPlanLoaded = true;
             return;
         }
 
@@ -937,106 +933,87 @@ async function loadStudyPlan(token) {
         studyPlanContainer.innerHTML =
             renderStudyPlan(data.study_plan);
 
-        studyPlanLoaded = true;
-
-
     } catch (error) {
 
         console.error(error);
 
-        studyPlanContainer.innerHTML = `
-            <div class="empty-state">
+        studyPlanContainer.innerHTML = renderStudyPlanStart({
+            title: "Não foi possível conectar com a API",
+            message: "Confirme se o servidor está em execução e tente novamente.",
+            actionLabel: "Tentar novamente",
+            tone: "error",
+        });
 
-                <strong>
-                    Erro de conexão
-                </strong>
+    } finally {
 
-                <span>
-                    Não foi possível conectar com a API.
-                </span>
-
-            </div>
-        `;
+        studyPlanLoading = false;
+        studyPlanContainer.removeAttribute("aria-busy");
 
     }
 
 }
 
 
+studyPlanContainer?.addEventListener("click", event => {
+    const action = event.target.closest("[data-study-plan-action]");
+    if (action?.dataset.studyPlanAction === "generate") {
+        loadStudyPlan();
+    }
+});
+
+
 function renderStudyPlan(plan) {
-
-    /*
-     * Como o formato exato do JSON do plano
-     * pode mudar conforme o schema da LLM,
-     * esta função transforma objetos, listas
-     * e textos em uma estrutura visual.
-     */
-
-    if (typeof plan === "string") {
-
-        return `
-            <div class="study-plan-text">
-                ${escapeHtml(plan)}
-            </div>
-        `;
-
-    }
-
-
-    if (Array.isArray(plan)) {
-
-        return `
-            <div class="study-plan-list">
-
-                ${plan.map(item => `
-
-                    <div class="study-plan-item">
-                        ${renderStudyPlan(item)}
-                    </div>
-
-                `).join("")}
-
-            </div>
-        `;
-
-    }
-
-
-    if (typeof plan === "object" && plan !== null) {
-
-        return `
-
-            <div class="study-plan-content" data-no-translate>
-
-                ${Object.entries(plan).map(([key, value]) => `
-
-                    <div class="study-plan-block">
-
-                        <h3>
-                            ${escapeHtml(formatStudyPlanKey(key))}
-                        </h3>
-
-                        <div>
-                            ${renderStudyPlan(value)}
-                        </div>
-
-                    </div>
-
-                `).join("")}
-
-            </div>
-
-        `;
-
-    }
-
+    const items = Array.isArray(plan?.plano) ? plan.plano : [];
+    const totalMinutes = items.reduce((total, item) => total + (Number(item.tempo_estimado_minutos) || 0), 0);
 
     return `
-        <div class="study-plan-text">
-            ${escapeHtml(String(plan))}
+        <div class="study-plan-result" data-no-translate>
+            <header class="study-plan-result-header">
+                <div>
+                    <p class="eyebrow">SEU ROTEIRO DE REVISÃO</p>
+                    <h2>${items.length} ${items.length === 1 ? "prioridade definida" : "prioridades definidas"}</h2>
+                    <p>Comece pelo primeiro cartão e avance no seu ritmo. O plano usa as dificuldades observadas nas suas respostas.</p>
+                </div>
+                <div class="study-plan-summary">
+                    <strong>${totalMinutes || "—"}${totalMinutes ? " min" : ""}</strong>
+                    <span>tempo estimado</span>
+                </div>
+            </header>
+            <div class="study-plan-list">
+                ${items.map((item, index) => {
+                    const priority = Number(item.prioridade);
+                    const minutes = Number(item.tempo_estimado_minutos);
+                    const contents = Array.isArray(item.conteudos) ? item.conteudos : [];
+                    const activities = Array.isArray(item.atividades) ? item.atividades : [];
+                    return `
+                        <article class="study-plan-item">
+                            <header class="study-plan-item-header">
+                                <span class="study-plan-order">${String(index + 1).padStart(2, "0")}</span>
+                                <div>
+                                    <p class="study-plan-label">FOCO DE ESTUDO</p>
+                                    <h3>${escapeHtml(item.topico || "Tópico prioritário")}</h3>
+                                </div>
+                                <div class="study-plan-badges">
+                                    ${Number.isFinite(priority) ? `<span>Prioridade ${Math.round(priority)}%</span>` : ""}
+                                    ${Number.isFinite(minutes) ? `<span>${Math.round(minutes)} min</span>` : ""}
+                                </div>
+                            </header>
+                            <div class="study-plan-reason"><strong>Por que revisar</strong><p>${escapeHtml(item.motivo || "Dificuldade observada nas respostas enviadas.")}</p></div>
+                            <div class="study-plan-goal"><strong>Objetivo</strong><p>${escapeHtml(item.objetivo || "Reforçar esse conteúdo com prática guiada.")}</p></div>
+                            <div class="study-plan-actions-grid">
+                                ${contents.length ? `<section><h4>Conteúdos</h4><ul>${contents.map(content => `<li>${escapeHtml(content)}</li>`).join("")}</ul></section>` : ""}
+                                ${activities.length ? `<section><h4>Pratique</h4><ul>${activities.map(activity => `<li>${escapeHtml(activity)}</li>`).join("")}</ul></section>` : ""}
+                            </div>
+                        </article>
+                    `;
+                }).join("")}
+            </div>
+            <footer class="study-plan-footer">
+                <span>O plano é atualizado a partir de novas respostas enviadas.</span>
+                <button class="secondary-button" data-study-plan-action="generate" type="button">Atualizar plano</button>
+            </footer>
         </div>
     `;
-
 }
 
 

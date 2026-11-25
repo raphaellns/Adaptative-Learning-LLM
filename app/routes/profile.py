@@ -140,7 +140,8 @@ def get_performance(
         "topics": topic_performance
     }
 
-@router.get("/study-plan")
+@router.post("/study-plan")
+@router.get("/study-plan", deprecated=True)
 def get_study_plan(
     credentials=Depends(bearer_scheme),
     db=Depends(get_db)
@@ -203,9 +204,20 @@ def get_study_plan(
         study_plan = {"plano": []}
     else:
         plan_started = time.perf_counter()
+        # The plan only depends on the facts used as evidence. Keeping this
+        # fingerprint compact makes a cache lookup inexpensive even when the
+        # saved feedback texts are long.
+        plan_evidence = [
+            {
+                "correta": item["correta"],
+                "topico": item["topico"],
+                "erro_principal": item["erro_principal"],
+            }
+            for item in historical_results
+        ]
         history_digest = hashlib.sha256(
             json.dumps(
-                historical_results,
+                plan_evidence,
                 ensure_ascii=False,
                 sort_keys=True,
                 separators=(",", ":"),

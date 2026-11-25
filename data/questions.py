@@ -149,8 +149,9 @@ questions = [
     },
 
     {
+        # A soma é o objetivo central; scanf e printf são meios de entrada/saída.
         "id": 9,
-        "topic": "Entrada e saída de dados",
+        "topic": "Lógica de programação",
         "question": """
         Escreva um programa que leia dois números inteiros e mostre
         a soma deles.

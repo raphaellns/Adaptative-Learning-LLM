@@ -191,8 +191,8 @@ body:has(#sidebar) .main-content { margin-left: 286px; max-width: 1500px; paddin
 .dashboard-card p, .info-card p, .recommendations-card p { color: var(--muted); line-height: 1.65; }
 .highlight-card { background: linear-gradient(135deg, var(--surface), var(--brand-soft)); border-color: color-mix(in srgb, var(--brand) 25%, var(--border)); grid-column: span 2; }
 .card-icon { align-items: center; background: var(--brand-soft); border: 1px solid color-mix(in srgb, var(--brand) 20%, var(--border)); border-radius: 14px; color: var(--brand); display: flex; font-size: 20px; height: 48px; justify-content: center; margin-bottom: 15px; width: 48px; }
-.primary-button, .auth-card form button { background: linear-gradient(135deg, #315ec9, #168a87); border: 1px solid transparent; border-radius: 10px; box-shadow: 0 7px 16px rgba(49, 94, 201, .18); color: #fff; cursor: pointer; font-size: 13px; font-weight: 730; min-height: 43px; padding: 10px 16px; transition: filter .16s ease, transform .16s ease, box-shadow .16s ease; }
-.primary-button:hover, .auth-card form button:hover { box-shadow: 0 10px 22px rgba(49,94,201,.24); filter: saturate(1.1); transform: translateY(-1px); }
+.primary-button, .auth-card form button:not(.password-visibility-toggle) { background: linear-gradient(135deg, #315ec9, #168a87); border: 1px solid transparent; border-radius: 10px; box-shadow: 0 7px 16px rgba(49, 94, 201, .18); color: #fff; cursor: pointer; font-size: 13px; font-weight: 730; min-height: 43px; padding: 10px 16px; transition: filter .16s ease, transform .16s ease, box-shadow .16s ease; }
+.primary-button:hover, .auth-card form button:not(.password-visibility-toggle):hover { box-shadow: 0 10px 22px rgba(49,94,201,.24); filter: saturate(1.1); transform: translateY(-1px); }
 .primary-button:disabled, .secondary-button:disabled, button:disabled { cursor: not-allowed; opacity: .58; transform: none; }
 .secondary-button { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text); cursor: pointer; font-size: 13px; font-weight: 660; min-height: 41px; padding: 9px 14px; transition: background .16s ease, border-color .16s ease, color .16s ease; }
 .secondary-button:hover { background: var(--surface-soft); border-color: var(--brand); color: var(--brand); }
@@ -218,6 +218,43 @@ body:has(#sidebar) .main-content { margin-left: 286px; max-width: 1500px; paddin
 .home-performance-item span, .home-priority-row span, .study-plan-meta { color: var(--muted); }
 .home-priority-row, .study-plan-block, .study-plan-item, .assessment-question-text { background: var(--surface-soft); border-color: var(--border); color: var(--text); }
 .study-plan-item { border-radius: 10px; }
+.study-plan-panel { padding: clamp(20px, 3vw, 31px); }
+.study-plan-start { align-items: center; display: grid; gap: 18px; grid-template-columns: auto minmax(0, 1fr) auto; }
+.study-plan-start-icon { align-items: center; background: var(--brand-soft); border: 1px solid color-mix(in srgb, var(--brand) 26%, var(--border)); border-radius: 15px; color: var(--brand); display: flex; flex: 0 0 auto; font-size: 21px; font-weight: 850; height: 51px; justify-content: center; width: 51px; }
+.study-plan-start .eyebrow, .study-plan-result .eyebrow { margin: 0 0 5px; }
+.study-plan-start h2, .study-plan-result h2 { color: var(--text); font-size: clamp(19px, 2.2vw, 25px); letter-spacing: -.035em; margin: 0; }
+.study-plan-start p:not(.eyebrow), .study-plan-result-header > div > p:not(.eyebrow) { color: var(--muted-strong); font-size: 13px; line-height: 1.65; margin: 5px 0 0; max-width: 620px; }
+.study-plan-start-error .study-plan-start-icon { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 30%, var(--border)); color: var(--danger); }
+.study-plan-generate-button { margin: 0; white-space: nowrap; }
+.study-plan-loading, .study-plan-success-empty { align-items: center; background: var(--surface-soft); border: 1px solid var(--border); border-radius: 14px; display: flex; gap: 13px; min-height: 96px; padding: 19px; }
+.study-plan-loading > div { display: grid; gap: 3px; }
+.study-plan-loading strong, .study-plan-success-empty strong { color: var(--text); font-size: 14px; }
+.study-plan-loading span:not(.loading-spinner), .study-plan-success-empty p { color: var(--muted-strong); font-size: 12px; line-height: 1.55; margin: 0; }
+.study-plan-success-empty > span { align-items: center; background: var(--success-soft); border-radius: 50%; color: var(--success); display: inline-flex; flex: 0 0 auto; font-weight: 850; height: 34px; justify-content: center; width: 34px; }
+.study-plan-success-empty > div { display: grid; gap: 4px; }
+.study-plan-success-empty .secondary-button { margin-left: auto; white-space: nowrap; }
+.study-plan-result { display: grid; gap: 18px; }
+.study-plan-result-header { align-items: center; background: linear-gradient(135deg, color-mix(in srgb, var(--brand-soft) 74%, var(--surface)), var(--surface)); border: 1px solid var(--border); border-radius: 15px; display: flex; gap: 18px; justify-content: space-between; padding: clamp(17px, 2.5vw, 24px); }
+.study-plan-summary { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: grid; flex: 0 0 auto; gap: 2px; min-width: 105px; padding: 12px; text-align: center; }
+.study-plan-summary strong { color: var(--brand); font-size: 21px; letter-spacing: -.04em; }
+.study-plan-summary span { color: var(--muted-strong); font-size: 10px; font-weight: 700; }
+.study-plan-list { display: grid; gap: 12px; }
+.study-plan-result .study-plan-item { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; color: var(--text); padding: clamp(17px, 2.4vw, 23px); }
+.study-plan-item-header { align-items: center; display: grid; gap: 11px; grid-template-columns: auto minmax(0, 1fr) auto; }
+.study-plan-order { align-items: center; background: var(--brand-soft); border-radius: 9px; color: var(--brand); display: flex; font-size: 11px; font-weight: 850; height: 34px; justify-content: center; letter-spacing: .04em; width: 34px; }
+.study-plan-label { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .11em; margin: 0 0 3px; }
+.study-plan-result .study-plan-item h3 { color: var(--text); font-size: 16px; letter-spacing: -.02em; margin: 0; }
+.study-plan-badges { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.study-plan-badges span { background: var(--teal-soft); border-radius: 999px; color: var(--teal); font-size: 10px; font-weight: 750; padding: 5px 8px; white-space: nowrap; }
+.study-plan-reason, .study-plan-goal { border-top: 1px solid var(--border); display: grid; gap: 3px; margin-top: 15px; padding-top: 13px; }
+.study-plan-reason strong, .study-plan-goal strong { color: var(--text); font-size: 11px; }
+.study-plan-reason p, .study-plan-goal p { color: var(--muted-strong); font-size: 12px; line-height: 1.62; margin: 0; }
+.study-plan-actions-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 14px; }
+.study-plan-actions-grid section { background: var(--surface-soft); border-radius: 10px; padding: 12px; }
+.study-plan-actions-grid h4 { color: var(--text); font-size: 11px; margin: 0 0 7px; }
+.study-plan-actions-grid ul { color: var(--muted-strong); display: grid; font-size: 12px; gap: 5px; line-height: 1.5; margin: 0; padding-left: 17px; }
+.study-plan-footer { align-items: center; border-top: 1px solid var(--border); color: var(--muted-strong); display: flex; font-size: 11px; gap: 16px; justify-content: space-between; padding-top: 15px; }
+.study-plan-footer .secondary-button { margin: 0; white-space: nowrap; }
 .technology-list span { background: var(--brand-soft); border: 1px solid var(--border); border-radius: 999px; color: var(--brand); font-weight: 650; }
 .project-author { color: var(--muted); }
 .section-title { color: var(--text); }
@@ -425,14 +462,37 @@ body:has(#sidebar) .main-content { margin-left: 286px; max-width: 1500px; paddin
 .auth-card .form-group { margin-bottom: 16px; }
 .auth-card .form-group label { display: block; margin-bottom: 6px; }
 .auth-card .form-group input { min-height: 45px; width: 100%; }
-.auth-card form button { margin-top: 3px; width: 100%; }
+.auth-card form button:not(.password-visibility-toggle) { margin-top: 3px; width: 100%; }
 .auth-link { color: var(--muted); font-size: 12px; margin-top: 18px; text-align: left; }
 .auth-link a { color: var(--brand); font-weight: 750; text-decoration: none; }
 .auth-link a:hover { text-decoration: underline; }
 .auth-privacy { border-top: 1px solid var(--border); color: var(--muted); font-size: 10px; line-height: 1.5; margin: 20px 0 0; padding-top: 13px; }
-.password-input-wrap { position: relative; }
-.password-input-wrap input { padding-right: 75px !important; }
-.password-visibility-toggle { background: transparent; border: 0; border-radius: 7px; color: var(--brand); cursor: pointer; font-size: 11px; font-weight: 750; padding: 6px; position: absolute; right: 7px; top: 50%; transform: translateY(-50%); }
+.auth-card form .password-input-wrap { display: block; position: relative; width: 100%; }
+.auth-card form .password-input-wrap > input { display: block; padding-right: 78px !important; width: 100%; }
+/* Must override the broad legacy rule for form buttons used by the submit action. */
+.auth-card form .password-input-wrap > .password-visibility-toggle {
+    align-items: center;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: var(--brand) !important;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 750;
+    height: 32px !important;
+    justify-content: center;
+    margin: 0 !important;
+    min-height: 32px !important;
+    padding: 6px 8px !important;
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%) !important;
+    width: auto !important;
+    z-index: 1;
+}
+.auth-card form .password-input-wrap > .password-visibility-toggle:hover { filter: none !important; text-decoration: underline; }
 #login-message, #register-message { color: var(--muted-strong); font-size: 12px; }
 
 /* Quick preferences panel and page controls */
@@ -519,6 +579,19 @@ body:not(:has(#sidebar)):not(:has(.auth-container)) .back-button { align-items: 
     .auth-intro { display: none; }
     .auth-card { align-self: center; max-width: 460px; }
     .auth-card h1 { font-size: 23px; }
+    .study-plan-start { align-items: flex-start; grid-template-columns: auto minmax(0, 1fr); }
+    .study-plan-start .study-plan-generate-button { grid-column: 1 / -1; width: 100%; }
+    .study-plan-result-header, .study-plan-success-empty { align-items: flex-start; flex-direction: column; }
+    .study-plan-summary, .study-plan-success-empty .secondary-button { margin-left: 0; }
+    .study-plan-summary { text-align: left; width: 100%; }
+}
+
+@media (max-width: 560px) {
+    .study-plan-item-header { align-items: flex-start; grid-template-columns: auto minmax(0, 1fr); }
+    .study-plan-badges { grid-column: 1 / -1; justify-content: flex-start; }
+    .study-plan-actions-grid { grid-template-columns: 1fr; }
+    .study-plan-footer { align-items: flex-start; flex-direction: column; }
+    .study-plan-footer .secondary-button { width: 100%; }
 }
 
 @media (max-width: 820px) {

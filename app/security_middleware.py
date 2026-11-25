@@ -37,6 +37,8 @@ class ApiProtectionMiddleware:
 
     @staticmethod
     def _rate_policy(method: str, path: str):
+        if path == "/profile/study-plan" and method in {"GET", "POST"}:
+            return "study-plan", 3, 10 * 60
         if method != "POST":
             return None
         if path == "/auth/login":
